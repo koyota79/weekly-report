@@ -93,11 +93,6 @@ class ReportHome extends Component{
         // });
     }
     handleChange = (e ,data) => {
-        console.log(e.target.id);
-        // this.setState({
-        //     [e.target.id] : e.target.value
-        // });
-        const { LIST } = this.state;
         console.log("data:::");
         this.setState({
             [e.target.id] : e.target.value
@@ -124,13 +119,32 @@ class ReportHome extends Component{
         });
     }
 
+    
+    handleUpdate = (id ,data) => {
+        console.log(":::::handleUpdate::::::"+id);
+        const { LIST } = this.state;
+        this.setState({
+            id              : "",
+            gubun           : "",
+            document_num    : "",
+            title           : "",
+            content         : "",
+            LIST: LIST.map(
+                LIST => id === LIST.id
+            ? { ...LIST, ...data } // 새 객체를 만들어서 기존의 값과 전달받은 data 을 덮어씀
+            : LIST // 기존의 값을 그대로 유지
+            )
+        })
+
+    }
 
     componentDidUpdate(prevProps, prevState) {
         // 여기서는, editing 값이 바뀔 때 처리 할 로직이 적혀있습니다.
         // 수정을 눌렀을땐, 기존의 값이 input에 나타나고,
         // 수정을 적용할땐, input 의 값들을 부모한테 전달해줍니다.
-    
-        const { LIST, onUpdate } = this.state;
+        console.log(':::prevState::');
+        console.log(prevState);
+        const { LIST } = this.state;
         if(!prevState.EDITING && this.state.EDITING) {
           // editing 값이 false -> true 로 전환 될 때
           // info 의 값을 state 에 넣어준다
@@ -143,9 +157,11 @@ class ReportHome extends Component{
         if (prevState.EDITING && !this.state.EDITING) {
           // editing 값이 true -> false 로 전환 될 때
           console.log(':::::::componentDidUpdate2222222:::');
-          onUpdate(LIST.id, {
-            title: this.state.LIST.title,
-            content: this.state.LIST.content
+          this.handleUpdate(prevState.id, {
+            gubun           : this.state.gubun,
+            document_num    : this.state.document_num,
+            title           : this.state.title,
+            content         : this.state.content
           });
         }
     }
