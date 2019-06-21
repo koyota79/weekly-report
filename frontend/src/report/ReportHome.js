@@ -27,6 +27,17 @@ class ReportHome extends Component{
             console.log(e);
         }
     }
+    handleReset = (e) => {
+        e.preventDefault()
+        this.setState({
+            id              : "",
+            gubun           : "",
+            document_num    : "",
+            title           : "",
+            content         : "",
+            EDITING         : false
+        })
+    }
 
     handlerSelectRow = (rowData) =>{
         console.log("::rowData::");
@@ -43,7 +54,12 @@ class ReportHome extends Component{
     handleCreate = (e) => {
         e.preventDefault()
         console.log(this.state)
-   
+        const {gubun ,title ,content ,document_num} = this.state
+        if(gubun ==='' || title ==='' || content ==='' || document_num ===''){
+            alert('필수사항 미입력')
+            return
+        }
+
         try {
             const {gubun ,title ,content ,document_num ,LIST} = this.state
             let form = new FormData() 
@@ -102,6 +118,7 @@ class ReportHome extends Component{
     handleRemove = (id) => { 
         console.log(id);
         const { LIST } = this.state;
+
         let form = new FormData() 
         form.append('id', id) 
 
@@ -122,19 +139,37 @@ class ReportHome extends Component{
     
     handleUpdate = (id ,data) => {
         console.log(":::::handleUpdate::::::"+id);
-        const { LIST } = this.state;
-        this.setState({
-            id              : "",
-            gubun           : "",
-            document_num    : "",
-            title           : "",
-            content         : "",
-            LIST: LIST.map(
-                LIST => id === LIST.id
-            ? { ...LIST, ...data } // 새 객체를 만들어서 기존의 값과 전달받은 data 을 덮어씀
-            : LIST // 기존의 값을 그대로 유지
-            )
-        })
+        const { LIST  } = this.state;
+
+        let form = new FormData()
+        form.append('id', id)  
+        form.append('gubun', data.gubun) 
+        form.append('title', data.title) 
+        form.append('content',data.content)
+        form.append('document_num',data.document_num)
+
+        const axios = require('axios');
+        axios.post('http://127.0.0.1:5000/weekly_report_update', form
+        ).then(response => { 
+            console.log(response);
+            if(response.data ==='Y'){
+              
+                this.setState({
+                    id              : "",
+                    gubun           : "",
+                    document_num    : "",
+                    title           : "",
+                    content         : "",
+                    LIST: LIST.map(
+                        LIST => id === LIST.id
+                    ? { ...LIST, ...data } // 새 객체를 만들어서 기존의 값과 전달받은 data 을 덮어씀
+                    : LIST // 기존의 값을 그대로 유지
+                    )
+                })
+            }else{
+                alert('삭제 실패')
+            }
+        });
 
     }
 
@@ -169,7 +204,8 @@ class ReportHome extends Component{
     render(){
         return ( 
             <div>
-               <ReportForm value={this.state} onChange={this.handleChange}  onCreate={this.handleCreate}  onUpdate={this.handleToggleEdit} />
+               <ReportForm value={this.state} onChange={this.handleChange}  onCreate={this.handleCreate}  
+                     onUpdate={this.handleToggleEdit} onReset={this.handleReset}/>
                {/* {this.state.LIST.map(item => (
                     <div key={item.id}>
                         <h1>{item.title}</h1>

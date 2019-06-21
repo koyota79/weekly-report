@@ -2,16 +2,18 @@ import React from 'react';
 import {Form ,Col ,Button  } from 'react-bootstrap';
 
 
-const ReportForm = ({value, onChange, onCreate, onKeyPress ,onUpdate }) => {
+const ReportForm = ({value, onChange, onCreate, onKeyPress ,onUpdate ,onReset}) => {
     
   return (
     <Form > 
         <Form.Row>
-            <Form.Group as={Col} controlId="gubun" value={value.gubun ||''}>
+            <Form.Group as={Col} onChange={onChange}  controlId="gubun" value={value.gubun ||''}>
             <Form.Label>구분</Form.Label>
             <Form.Control as="select">
-                <option>선택</option>
-                <option>크레시스</option>
+                <option value='' selected={value.gubun ||''} >선택</option>
+                <option value='CRESYS' selected={value.gubun ||''} >크레시스</option>
+                <option value='LMS' selected={value.gubun ||''} >LMS</option>
+                <option value='MIS' selected={value.gubun ||''} >MIS</option>
             </Form.Control>
             </Form.Group>
 
@@ -42,7 +44,8 @@ const ReportForm = ({value, onChange, onCreate, onKeyPress ,onUpdate }) => {
                     <Button variant="success"  className="float-right" style={{ marginBottom: '20px' }}  onClick={onUpdate} > 
                     수정
                     </Button>
-                    <Button variant="primary"  className="float-right" style={{ marginBottom: '20px' , marginRight: '10px'  }}  type="reset" > 
+                    <Button variant="primary"  className="float-right" style={{ marginBottom: '20px' , marginRight: '10px'  }}  
+                       type="reset"   onClick={onReset}> 
                     취소
                     </Button>
                 </div>
