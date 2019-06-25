@@ -31,3 +31,35 @@
     transform: rotate(360deg);
   }
 }
+
+.fontSize_10 {
+  font-size: 10px;
+}
+
+.fontSize_13 {
+  font-size: 13px;
+}
+
+.fontSize_14 {
+  font-size: 14px;
+}
+
+.width_10 {
+  width : 10px;
+}
+
+.width_15 {
+  width : 15px;
+}
+
+.width_20 {
+  width : 20px;
+}
+
+.width_25 {
+  width : 25px;
+}
+
+.width_75 {
+  width : 75px;
+}

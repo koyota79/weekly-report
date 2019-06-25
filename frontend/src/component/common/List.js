@@ -2,7 +2,7 @@ import React from 'react';
 //import {Link} from "react-router-dom";
 //import {BrowserRouter} from "react-router-dom";
 import Table from 'react-bootstrap/Table';
-
+import {Button  } from 'react-bootstrap';
 
 const List = (props ) => {
     console.log(":::::::::LIST1::::::::::::::" ); 
@@ -11,12 +11,14 @@ const List = (props ) => {
 
     return props.data.LIST?(
       
-            <Table striped bordered hover>
+            <Table striped bordered hover size="sm">
             <thead>
                 <tr>
                     {
                         props.data.HEDER.map((item,i) => (
-                            <th key={i}>{item}</th>
+                            <th key={i}  style={{ textAlign:"center" ,width :props.data.H_WIDTH[i]+"px" }} className="fontSize_14">
+                                {item}
+                            </th>
                         ))
                     }
                 </tr>
@@ -29,14 +31,20 @@ const List = (props ) => {
                             {
                                 Object.getOwnPropertyNames( props.data.LIST[0]).map((keyObj ,n) => {
                                     return (!keyObj.includes("id")?(
-                                                <td key={n} onClick={() => props.onClick(item) } > 
-                                                    {item[keyObj]} 
+                                                <td key={n} onDoubleClick={() => props.onDoubleClick(item) } className="fontSize_13" > 
+                                                    {item[keyObj]}
                                                 </td>
                                             ):(null)
                                     )
                                 })
                             }
-                            <td><div onClick={() => props.onRemove(item.id)} >-</div></td>
+                            <td>
+                                <div>
+                                    <Button variant="danger" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onRemove(item.id)}  > 
+                                        삭제
+                                    </Button>
+                                </div>
+                            </td>
                         </tr>
                     ))
                 }

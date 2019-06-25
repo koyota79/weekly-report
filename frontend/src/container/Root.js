@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import { Route } from 'react-router-dom';
 import { BrowserRouter } from 'react-router-dom';
 import Header from '../component/Header';
-import Gnb from '../component/Gnb';
+//import Gnb from '../component/Gnb';
 
 import { Container, Row, Col } from 'reactstrap';
 
@@ -16,14 +16,14 @@ class Root extends Component {
         return (
             <div>
                 <BrowserRouter>
-                    <Container>
+                    <Container style={{ maxWidth: '1300px'}} >
                         <Header />  
                         <Row>
-                        <Col sm={2}><Gnb /></Col>
-                                <Col sm={10}>         
+                        {/* <Col sm={2}><Gnb /></Col> */}
+                               
                                     <Route exact path="/"   component={Main}/>
                                     <Route path="/report"   component={Report}/>
-                                </Col>
+                              
                         </Row>
                     </Container>   
                 </BrowserRouter>             
