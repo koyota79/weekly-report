@@ -9,6 +9,7 @@ import Moment  from 'moment';
 import '../App.css';
 import DatePicker ,{registerLocale} from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import getDay from "date-fns/getDay";
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 
@@ -37,29 +38,44 @@ class ReportHome extends Component{
         EDITING         : false
     }
 
+    isWeekday = date => {
+        const day = getDay(date);
+        return day !== 0 && day !== 6;
+    }
+
     componentDidMount() {
         this.handleReportList()
-        //console.log(Moment().format('YYYY[-]MM')) //YYYY[-]MM[-]DD
-        //console.log(Moment(v_toDate).add(1, 'week').format('YYYY-MM-DD'))
-        console.log(Moment("20190601").day(5).format('YYYY-MM-DD'))
-
         this.fncWeekDate(this.state.currentPage ,Moment().format('YYYYMMDD'))
-
     }
 
     fncWeekDate = (f_week ,datePicker) =>{
-        //alert(this.state.pagesCount)
-        // function pad(num) {
-        //     num = num + '';
-        //     return num.length < 2 ? '0' + num : num;
-        // }
-        // let datePicker = this.state.date.getFullYear() + '-' + pad(this.state.date.getMonth()+1) + '-' + pad(this.state.date.getDate());
         console.log("::dates 달력 선택 일자::");
         console.log(datePicker);
 
-        let v_toDate    = Moment(datePicker).format('YYYYMM')//현재월
-        let v_endDate   = Moment(v_toDate+"01").day(4).add(f_week,'week').format('YYYY-MM-DD')//현재일에서 차주 목요일 찾기
-        let v_startDate = Moment(v_endDate).add(-6,'day').format('YYYY-MM-DD')//차주 종료일에서 주일전 금요일 찾기
+        let v_toDate    = Moment(datePicker).format('YYYYMM')+"01"//현재월
+        //let v_endDate   = Moment(v_toDate+"01").day(4).add(f_week,'week').format('YYYY-MM-DD')//현재일에서 차주 목요일 찾기
+        //let v_startDate = Moment(v_endDate).add(-6,'day').format('YYYY-MM-DD')//차주 종료일에서 주일전 금요일 찾기 Moment(datePicker).days()
+        let v_startDate = "";
+        let v_endDate   = "";
+
+        let v_diffWeek = Moment(datePicker).isoWeekday(5).days() -Moment(datePicker).days()
+        
+        console.log(":::::v_diffWeek:::"+v_diffWeek)
+        if(f_week > 0){
+            v_startDate =Moment(v_toDate).isoWeekday(5).add(f_week,'week').format('YYYY-MM-DD')
+        }else{
+            v_startDate = Moment(datePicker).add(v_diffWeek , 'day').add(!v_diffWeek?0:-1,'week').format('YYYY-MM-DD')
+        }
+
+        if(v_diffWeek===1){
+            v_diffWeek = 0
+        }else if(v_diffWeek === 0){
+            v_diffWeek = 6
+        }else{
+            v_diffWeek = v_diffWeek-1
+        }
+
+        v_endDate   = Moment(datePicker).add(v_diffWeek , 'day').format('YYYY-MM-DD')
         let weekCnt     = this.fncWeekCnt(datePicker)
         this.setState({
             start_dt   : v_startDate,
@@ -321,13 +337,13 @@ class ReportHome extends Component{
             num = num + '';
             return num.length < 2 ? '0' + num : num;
         }
-        let datePicker = startDate.getFullYear() + '-' + pad(startDate.getMonth()+1) + '-' + pad(startDate.getDate());
+        let datePicker = startDate.getFullYear() + pad(startDate.getMonth()+1) + pad(startDate.getDate());
         console.log("::dates::");
         console.log(datePicker);
         this.setState({
             select_dt : datePicker
         })
-        this.fncWeekDate(1 ,datePicker)
+        this.fncWeekDate(0 ,datePicker)
 
     }
 
@@ -404,10 +420,11 @@ class ReportHome extends Component{
                         <DatePicker 
                                 selected={this.state.date}
                                 onChange={this.onDateChange}
-                                dateFormat="yyyy-MM"
-                                showMonthYearPicker
+                                filterDate={this.isWeekday}
+                                dateFormat="yyyy/MM/dd"
                                 locale="kr"
                             />
+    
                     </div>
                     {/* <Form.Group controlId='f_week' style={{ width: '100px' ,marginLeft : "20px" ,float : "left"}}> 
                         <Form.Control as="select" className="fontSize_13" onChange={this.handleChange} value={this.state.f_week ||''} >
