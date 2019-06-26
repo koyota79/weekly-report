@@ -9,14 +9,14 @@ const List = (props ) => {
     console.log(props);
     console.log(":::::::::LIST2::::::::::::::" ); 
 
-    return props.data.LIST?(
+    return props.data.LIST.length > 0 ?(
       
             <Table striped bordered hover size="sm">
             <thead>
                 <tr>
                     {
                         props.data.HEDER.map((item,i) => (
-                            <th key={i}  style={{ textAlign:"center" ,width :props.data.H_WIDTH[i]+"px" }} className="fontSize_14">
+                            <th key={i}  style={{ textAlign : "center" , width :props.data.H_WIDTH[i]+"px" }} className="fontSize_14">
                                 {item}
                             </th>
                         ))
@@ -53,111 +53,23 @@ const List = (props ) => {
     ):(
         (   
 
-            <Table striped bordered hover>
+            <Table striped bordered hover size="sm">
                 <thead>
                      <tr>
                          {
                              props.data.HEDER.map((item,i) => (
-                                 <th key={i}>{item}</th>
+                                 <th key={i} style={{ textAlign : "center" , width :props.data.H_WIDTH[i]+"px" }} className="fontSize_14">{item}</th>
                              ))
                          }
                      </tr>
                  </thead>
                  <tbody>
-                     <tr><td>NO DATA</td></tr>
+                     <tr><td  colSpan="8" style={{ textAlign: 'center'}}>NO DATA</td></tr>
                  </tbody>
              </Table>
         )
     
     );
-
-
-    // if(props.LIST.list === null){
-    //     return(
-    //         <Table striped bordered hover>
-    //             <thead>
-    //                 <tr>
-    //                     {
-    //                         props.HEDER.map((item,i) => (
-    //                             <th key={i}>{item}</th>
-    //                         ))
-    //                     }
-    //                 </tr>
-    //             </thead>
-    //             <tbody>
-    //                 <tr><td>NO DATA</td></tr>
-    //             </tbody>
-    //         </Table>
-    //     );
-    // }else{
-    // console.log(props.LIST.list?'1':'0');
-
-    // const v_name  = Object.getOwnPropertyNames( props.LIST.list[0]);
-    //     return (
-
-    //         <Table striped bordered hover>
-    //             <thead>
-    //             <tr>
-    //                 {
-    //                     props.HEDER.map((item,i) => (
-    //                         <th key={i}>{item}</th>
-    //                     ))
-    //                 }
-    //             </tr>
-    //             </thead>
-    //             <tbody>
-    //                 {   props.LIST.map((item,i) => (
-    //                         <tr key={i}>
-    //                                 <td>{i+1}</td>
-    //                                 {  
-    //                                     v_name.map((keyObj ,n) => {
-    //                                         if(!keyObj.includes("__KEY")){
-    //                                            return <td key={n} onClick={() => props.onClick(item) } >
-    //                                                 {item[keyObj] }
-    //                                             </td>   
-    //                                         }else{
-    //                                             return null
-    //                                         }
-                                            
-    //                                         //hidden 일경우
-    //                                         // keyObj.includes("__KEY")? //true or false 리턴값
-    //                                         // (
-    //                                         //   /*<td key={n}> <input type ='hidden' name={keyObj} value={item[keyObj]} key={n} /> </td>*/
-    //                                         //   <input type ='hidden' name={keyObj} value={item[keyObj]} key={n} /> 
-    //                                         // )
-    //                                         // :
-    //                                         // (<td key={n} onClick={() => props.onClick(item) } >{
-    //                                         //         item[keyObj] 
-    //                                         //   //console.log(item[keyObj]) 
-    //                                         // }</td> )
-    //                                   })  
-    //                                 }
-    //                                 <td><div onClick={() => props.onRemove(item.INDEX__KEY)} >-</div></td>
-    //                         </tr>
-    //                     ))
-    //                 }
-    //             </tbody>
-    //         </Table>
-
-    //     )//end retrun
-    // }
 }
 
 export default List;
-
-/*
-       { props.data.map((item,i) => (
-                    <li key={item.seq}>
-                        <Link to="/" className="link_webtoon">
-                            <div className="info_webtoon">
-                                <strong className="tit_webtoon">
-                                    {item.title}
-                                </strong>
-                                {item.content}
-                            </div>
-                        </Link>
-                    </li>
-                )) 
-        }
-
-*/

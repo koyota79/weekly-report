@@ -1,7 +1,7 @@
-
 import React, { Component } from 'react';
-//import ReportForm from './ReportForm'; 
+import axios from 'axios';
 import List from '../component/common/List';
+import ListPaging from '../component/common/ListPaging';
 import Table from 'react-bootstrap/Table';
 import {Form ,Button  } from 'react-bootstrap';
 import '../App.css';
@@ -11,10 +11,11 @@ import '../App.css';
 //import Calendar from 'react-calendar';
 import DatePicker from 'react-date-picker';
 
+
 class ReportHome extends Component{
     state = {
         HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"내용" ,"완료여부" ,"유형","삭제"], //헤더는 항상 첫번째에 위치
-        H_WIDTH         : ["50","70","200","250","0","80","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
+        H_WIDTH         : ["60","70","200","250","0","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
         id              : "",
         gubun           : "",
         document_num    : "",
@@ -23,23 +24,37 @@ class ReportHome extends Component{
         LIST            : [],
         date            : new Date(),
         f_week          : 1 ,
+        pagesCount      : 5,
+        currentPage     : 0,
         EDITING         : false
     }
 
     componentDidMount() {
         this.handleReportList()
+
+        let dateStr = "20190625"
+        let year  = Number(dateStr.substring(0, 4));
+        let month = Number(dateStr.substring(4, 6));
+        let nowDate = new Date(year, month-1, 1);
+        let lastDate = new Date(year, month, 0).getDate();
+        let monthSWeek = nowDate.getDay();
+        let weekSeq = parseInt((parseInt(lastDate) + monthSWeek - 1)/7) + 1;
+        this.setState({
+            pagesCount : weekSeq
+        });
+
     }
 
     handleReportList = () => {
         try {
             let form = new FormData() 
             form.append('p_week',        this.state.f_week) 
-            const axios = require('axios');
             axios.post('http://127.0.0.1:5000/weekly_report', form
             ).then(response => { 
                 console.log(response)
                 this.setState({
-                    LIST :response.data.LIST
+                    LIST        : response.data.LIST,
+                    statusText  : response.statusText
                 });
             });
         } catch (e) {
@@ -103,7 +118,6 @@ class ReportHome extends Component{
             form.append('p_complate',     f_complate)
             form.append('p_type',         f_type)
             
-            const axios = require('axios');
             axios.post('http://127.0.0.1:5000/weekly_report_insert', form
             ).then(response => { 
                 console.log("::::response::::");
@@ -118,6 +132,7 @@ class ReportHome extends Component{
                         f_content         : "",
                         f_complate        : "",
                         f_type            : "",
+                        statusText        : response.statusText,
                         EDITING           : false,
 
                         LIST : LIST.concat({
@@ -164,13 +179,13 @@ class ReportHome extends Component{
         let form = new FormData() 
         form.append('id', id) 
 
-        const axios = require('axios');
         axios.post('http://127.0.0.1:5000/weekly_report_delete', form
         ).then(response => { 
             console.log(response);
             if(response.data ==='Y'){
                 this.setState({
-                    LIST: LIST.filter(LIST => LIST.id !== id)
+                    LIST        : LIST.filter(LIST => LIST.id !== id),
+                    statusText  : response.statusText,
                 });
             }else{
                 alert('삭제 실패')
@@ -194,7 +209,6 @@ class ReportHome extends Component{
         form.append('p_complate'      ,chgData.complate)
         form.append('p_type'          ,chgData.type)
 
-        const axios = require('axios');
         axios.post('http://127.0.0.1:5000/weekly_report_update', form
         ).then(response => { 
             console.log("::::response:1::::")
@@ -211,6 +225,7 @@ class ReportHome extends Component{
                     f_content         : "",
                     f_complate        : "",
                     f_type            : "",
+                    statusText        : response.statusText,
                     EDITING           : false,
                     LIST: LIST.map(
                         LIST => id === LIST.id
@@ -266,6 +281,14 @@ class ReportHome extends Component{
     onDatesChange = ( startDate) => {
         console.log(startDate)
         this.setState({date : startDate})
+    }
+
+    handlerPagingClick = (e ,index) =>{
+        e.preventDefault();
+        this.setState({
+            currentPage: index,
+            f_week : index
+        });
     }
 
     render(){
@@ -327,14 +350,16 @@ class ReportHome extends Component{
                         취소
                     </Button>
                     {/* <Calendar onChange={this.onDatesChange} value={this.state.date}  /> */}
-                    <div style={{marginLeft : "20px" ,float : "left"}}>
+                    <div style={{marginLeft : "20px" ,marginTop : "5px" ,float : "left"}}>
                         <DatePicker  onChange={this.onDatesChange}  value={this.state.date} />
                     </div>
-                    <Form.Group controlId='f_week' style={{ width: '100px' ,marginLeft : "20px" ,float : "left"}}> 
+                    {/* <Form.Group controlId='f_week' style={{ width: '100px' ,marginLeft : "20px" ,float : "left"}}> 
                         <Form.Control as="select" className="fontSize_13" onChange={this.handleChange} value={this.state.f_week ||''} >
                             {renderOptions(options.week)}
                         </Form.Control> 
-                    </Form.Group> 
+                    </Form.Group>  */}
+                    <div style={{ width: '40px'  ,marginLeft : "20px" ,marginRight : "5px" ,marginTop : "5px" ,float : "left"}}>주차 : </div>
+                    <ListPaging data={this.state} onPagingClick={this.handlerPagingClick}/> 
                 </div>
                 <Form > 
                 <Table striped bordered hover size="sm">
@@ -381,7 +406,7 @@ class ReportHome extends Component{
                 </Table>
                 </Form > 
 
-                { this.state.LIST.length > 0 ? (
+                { this.state.statusText==="OK" ? (
                     <List data={this.state} onRemove={this.handleRemove} onDoubleClick={this.handlerSelectRow} />
                     ):(
                         <span>LOADING....</span>
@@ -391,4 +416,4 @@ class ReportHome extends Component{
         )
     }
 }
-export default ReportHome;
+export default ReportHome; 
