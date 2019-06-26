@@ -4,12 +4,18 @@ import List from '../component/common/List';
 import ListPaging from '../component/common/ListPaging';
 import Table from 'react-bootstrap/Table';
 import {Form ,Button  } from 'react-bootstrap';
+import { Input } from 'reactstrap';
+import Moment  from 'moment';
 import '../App.css';
-//import {LinkedCalendar} from 'rb-datepicker';
+import DatePicker ,{registerLocale} from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import ko from 'date-fns/locale/ko';
+registerLocale('kr', ko)
+
 //import 'bootstrap/dist/css/bootstrap.css';
 //import 'bootstrap-daterangepicker/daterangepicker.css';
 //import Calendar from 'react-calendar';
-import DatePicker from 'react-date-picker';
+//import DatePicker from 'react-date-picker';
 
 
 class ReportHome extends Component{
@@ -26,23 +32,53 @@ class ReportHome extends Component{
         f_week          : 1 ,
         pagesCount      : 5,
         currentPage     : 0,
+        start_dt        : "",      
+        end_dt          : "",
         EDITING         : false
     }
 
     componentDidMount() {
         this.handleReportList()
+        //console.log(Moment().format('YYYY[-]MM')) //YYYY[-]MM[-]DD
+        //console.log(Moment(v_toDate).add(1, 'week').format('YYYY-MM-DD'))
+        console.log(Moment("20190601").day(5).format('YYYY-MM-DD'))
 
-        let dateStr = "20190625"
-        let year  = Number(dateStr.substring(0, 4));
-        let month = Number(dateStr.substring(4, 6));
-        let nowDate = new Date(year, month-1, 1);
-        let lastDate = new Date(year, month, 0).getDate();
-        let monthSWeek = nowDate.getDay();
-        let weekSeq = parseInt((parseInt(lastDate) + monthSWeek - 1)/7) + 1;
+        this.fncWeekDate(this.state.currentPage ,Moment().format('YYYYMMDD'))
+
+    }
+
+    fncWeekDate = (f_week ,datePicker) =>{
+        //alert(this.state.pagesCount)
+        // function pad(num) {
+        //     num = num + '';
+        //     return num.length < 2 ? '0' + num : num;
+        // }
+        // let datePicker = this.state.date.getFullYear() + '-' + pad(this.state.date.getMonth()+1) + '-' + pad(this.state.date.getDate());
+        console.log("::dates 달력 선택 일자::");
+        console.log(datePicker);
+
+        let v_toDate    = Moment(datePicker).format('YYYYMM')//현재월
+        let v_endDate   = Moment(v_toDate+"01").day(4).add(f_week,'week').format('YYYY-MM-DD')//현재일에서 차주 목요일 찾기
+        let v_startDate = Moment(v_endDate).add(-6,'day').format('YYYY-MM-DD')//차주 종료일에서 주일전 금요일 찾기
+        let weekCnt     = this.fncWeekCnt(datePicker)
         this.setState({
-            pagesCount : weekSeq
+            start_dt   : v_startDate,
+            end_dt     : v_endDate,
+            currentPage : f_week,
+            pagesCount : weekCnt 
         });
+    }
 
+    fncWeekCnt = (datePicker) => {     
+        //해당월에 총 주차를 구한다
+        let dateStr     = Moment(datePicker).format('YYYYMMDD')
+        let year        = Number(dateStr.substring(0, 4));
+        let month       = Number(dateStr.substring(4, 6));
+        let nowDate     = new Date(year, month-1, 1);
+        let lastDate    = new Date(year, month, 0).getDate();
+        let monthSWeek  = nowDate.getDay();
+        let weekSeq     = parseInt((parseInt(lastDate) + monthSWeek - 1)/7);
+        return weekSeq;   
     }
 
     handleReportList = () => {
@@ -278,9 +314,21 @@ class ReportHome extends Component{
         }
     }
 
-    onDatesChange = ( startDate) => {
+    onDateChange = ( startDate) => {
         console.log(startDate)
         this.setState({date : startDate})
+        function pad(num) {
+            num = num + '';
+            return num.length < 2 ? '0' + num : num;
+        }
+        let datePicker = startDate.getFullYear() + '-' + pad(startDate.getMonth()+1) + '-' + pad(startDate.getDate());
+        console.log("::dates::");
+        console.log(datePicker);
+        this.setState({
+            select_dt : datePicker
+        })
+        this.fncWeekDate(1 ,datePicker)
+
     }
 
     handlerPagingClick = (e ,index) =>{
@@ -289,6 +337,7 @@ class ReportHome extends Component{
             currentPage: index,
             f_week : index
         });
+        this.fncWeekDate(index ,this.state.select_dt)
     }
 
     render(){
@@ -351,50 +400,59 @@ class ReportHome extends Component{
                     </Button>
                     {/* <Calendar onChange={this.onDatesChange} value={this.state.date}  /> */}
                     <div style={{marginLeft : "20px" ,marginTop : "5px" ,float : "left"}}>
-                        <DatePicker  onChange={this.onDatesChange}  value={this.state.date} />
+                        {/* <DatePicker  onChange={this.onDatesChange}  value={this.state.date} dateFormat="MM-yyyy" showMonthYearPicker/> */}
+                        <DatePicker 
+                                selected={this.state.date}
+                                onChange={this.onDateChange}
+                                dateFormat="yyyy-MM"
+                                showMonthYearPicker
+                                locale="kr"
+                            />
                     </div>
                     {/* <Form.Group controlId='f_week' style={{ width: '100px' ,marginLeft : "20px" ,float : "left"}}> 
                         <Form.Control as="select" className="fontSize_13" onChange={this.handleChange} value={this.state.f_week ||''} >
                             {renderOptions(options.week)}
                         </Form.Control> 
                     </Form.Group>  */}
-                    <div style={{ width: '40px'  ,marginLeft : "20px" ,marginRight : "5px" ,marginTop : "5px" ,float : "left"}}>주차 : </div>
-                    <ListPaging data={this.state} onPagingClick={this.handlerPagingClick}/> 
-                </div>
+                    <div style={{ width: '40px'  ,marginLeft : "20px"   ,marginRight : "5px" ,marginTop : "5px" ,float : "left"}}>주차 : </div>
+                    <div style={{ width: '200px' ,marginRight : "450px" ,marginTop : "15px" ,float : "right"}}>{this.state.start_dt} ~ {this.state.end_dt}</div>
+                    <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
+                    </div>
                 <Form > 
                 <Table striped bordered hover size="sm">
                     <tbody>
                         <tr>
-                            <td>
+                            <td style={{ width: '120px' ,textAlign : "center"}}>
                                 <Form.Group controlId='f_gubun'> 
-                                    <Form.Control as="select" className="fontSize_13" onChange={this.handleChange} value={f_gubun ||''} >
+                                    <Form.Control as="select" className="fontSize_13"  onChange={this.handleChange} value={f_gubun ||''} >
                                         {renderOptions(options.gubun)}
                                     </Form.Control> 
                                 </Form.Group>                            
                             </td>
-                            <td>    
+                            <td style={{ width: '200px' ,textAlign : "center"}}>    
                                 <Form.Group controlId="f_document_num">
                                     <Form.Control placeholder="문서번호" className="fontSize_13" onChange={this.handleChange}  value={f_document_num ||''} />
                                 </Form.Group>
                             </td>
-                            <td>
+                            <td style={{ width: '300px' ,textAlign : "center"}}>
                                 <Form.Group controlId="f_title">
                                     <Form.Control placeholder="요청사항" className="fontSize_13" onChange={this.handleChange}  value={f_title ||''} />
                                 </Form.Group>
                             </td>
-                            <td>
-                                <Form.Group controlId="f_content">
-                                    <Form.Control placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} />
+                            <td style={{ width: '0px' ,textAlign : "center"}}>
+                                <Form.Group>
+                                    {/* <Form.Control placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} /> */}
+                                    <Input type="textarea" name="f_content" id="f_content"  placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} />
                                 </Form.Group>
                             </td>
-                            <td>
+                            <td style={{ width: '120px' ,textAlign : "center"}}>
                                 <Form.Group controlId="f_complate">
                                     <Form.Control as="select" placeholder="완료여부" className="fontSize_13" onChange={this.handleChange}  value={f_complate ||''} >
                                         {renderOptions(options.complate)}
                                     </Form.Control>
                                 </Form.Group>
                             </td>
-                            <td>
+                            <td style={{ width: '80px' ,textAlign : "center"}}>
                                 <Form.Group controlId="f_type">
                                     <Form.Control as="select" placeholder="유형" className="fontSize_13 width_75" onChange={this.handleChange}  value={f_type ||''} >
                                         {renderOptions(options.type)}

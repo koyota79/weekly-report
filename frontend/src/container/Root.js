@@ -6,7 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import Header from '../component/Header';
 //import Gnb from '../component/Gnb';
 
-import { Container, Row, Col } from 'reactstrap';
+import { Container, Row } from 'reactstrap';
 
 import Report from '../report/ReportHome'; 
 import Main from './Main';
