@@ -137,3 +137,6 @@ def updateWeeklyReport():
 
 if __name__ == '__main__':
   app.run(debug=True)
+
+
+  #SELECT FLOOR((DATE_FORMAT(now(),'%d')+(DATE_FORMAT(DATE_FORMAT(now(),'%Y%m%01'),'%w')-1))/7)+1 WEEK_OF_MONTH;
