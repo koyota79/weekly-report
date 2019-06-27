@@ -4,6 +4,11 @@ from flaskext.mysql import MySQL
 from flask_cors import CORS
 from collections import OrderedDict
 import json
+# import socket
+# _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# _socket.connect(('26.2.111.149', 5000))
+
+
 
 app = Flask(__name__)
 CORS(app)
@@ -32,8 +37,16 @@ def ExecuteQuery(sql,param):
 def weeklyList():
   if request.method == 'POST':
       v_week         = request.form.get('p_week', None)
-      print(v_week)
-      list = ExecuteQuery('select id, gubun, document_num, title ,content ,complate ,type from weekly_report where week =%s',v_week)
+      v_month        = request.form.get('p_month', None)
+      v_start_dt     = request.form.get('p_start_dt', None)
+
+      print(":::::::::::::::")
+      print(v_month)
+      print(v_start_dt)
+      
+      v_query = "select id, gubun, document_num, title ,content ,complate ,type from weekly_report where user_id =%s and started=%s "
+      v_param = ("kim",v_start_dt)
+      list = ExecuteQuery(v_query,v_param)
       v_result = json.dumps({
         "result"   : "Y" ,
         "LIST"     : list
@@ -47,7 +60,8 @@ def insertWeeklyReport():
   if request.method == 'POST':
      v_user_id       = "kim" #request.form.get('user_id', None)
      v_year          = "2019" #request.form.get('year', None)
-     v_month         = "06" #request.form.get('month', None)
+     v_month         = request.form.get('p_month', None)
+     v_start_dt      = request.form.get('p_start_dt', None)
      v_week          = "4" #request.form.get('week', None)
      v_gubun         = request.form.get('p_gubun', None)
      v_document_num  = request.form.get('p_document_num', None)
@@ -58,9 +72,9 @@ def insertWeeklyReport():
   
      con     = mysql.connect()
      cursor  = con.cursor()
-     query   = "INSERT INTO weekly_report (user_id ,year ,month ,week ,gubun, document_num, title ,content ,complate ,type)"
-     query   +="VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-     values  = (v_user_id ,v_year ,v_month ,v_week ,v_gubun ,v_document_num , v_content ,v_title ,v_complate ,v_type)
+     query   = "INSERT INTO weekly_report (user_id ,started ,year ,month ,week ,gubun, document_num, title ,content ,complate ,type)"
+     query   +="VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+     values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num , v_content ,v_title ,v_complate ,v_type)
      cursor.execute(query, values)
      v_insertId = con.insert_id()
      con.commit()

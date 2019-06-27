@@ -28,89 +28,79 @@ class ReportHome extends Component{
         document_num    : "",
         title           : "",
         content         : "",
+        localhost       : "26.2.111.149:5000",
         LIST            : [],
         date            : new Date(),
-        f_week          : 1 ,
-        pagesCount      : 5,
-        currentPage     : 0,
-        start_dt        : "",      
+       // f_week          : 1 ,
+        //pagesCount      : 5,
+        currentPage     : Moment().weeks(),
+        start_dt        : Moment().format('YYYY-MM-DD'),      
         end_dt          : "",
         EDITING         : false
     }
 
     isWeekday = date => {
-        const day = getDay(date);
+        const day = getDay(date)
         return day !== 0 && day !== 6;
     }
 
     componentDidMount() {
-        this.handleReportList()
-        this.fncWeekDate(this.state.currentPage ,Moment().format('YYYYMMDD'))
+        this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
     }
 
-    fncWeekDate = (f_week ,datePicker) =>{
+    fncWeekDate = (currentWeek ,datePicker ,gubun) =>{
         console.log("::dates 달력 선택 일자::");
-        console.log(datePicker);
+        console.log(datePicker)
+        //console.log(currentWeek);
+        //console.log(Moment().week(25).format('YYYYMMDD'));
+    
+        let weeks = Moment(datePicker).week()
 
-        let v_toDate    = Moment(datePicker).format('YYYYMM')+"01"//현재월
-        //let v_endDate   = Moment(v_toDate+"01").day(4).add(f_week,'week').format('YYYY-MM-DD')//현재일에서 차주 목요일 찾기
-        //let v_startDate = Moment(v_endDate).add(-6,'day').format('YYYY-MM-DD')//차주 종료일에서 주일전 금요일 찾기 Moment(datePicker).days()
-        let v_startDate = "";
-        let v_endDate   = "";
+        if(gubun ==="BTN")//버튼클릭시
+            weeks      = currentWeek
+         
 
-        let v_diffWeek = Moment(datePicker).isoWeekday(5).days() -Moment(datePicker).days()
+        //console.log("금요일 찾기 ::" + Moment().week(weeks-1).format('YYYYMMDD'));
+        let v_startDate = ""
+        let v_endDate   = ""
+        let v_sDiff     = -1        
+        let v_eDiff     = 0       
+
+        if(Moment(datePicker).isoWeekday() >= 5){
+            v_sDiff = 0
+            v_eDiff = 1
+        }
         
-        console.log(":::::v_diffWeek:::"+v_diffWeek)
-        if(f_week > 0){
-            v_startDate =Moment(v_toDate).isoWeekday(5).add(f_week,'week').format('YYYY-MM-DD')
-        }else{
-            v_startDate = Moment(datePicker).add(v_diffWeek , 'day').add(!v_diffWeek?0:-1,'week').format('YYYY-MM-DD')
-        }
-
-        if(v_diffWeek===1){
-            v_diffWeek = 0
-        }else if(v_diffWeek === 0){
-            v_diffWeek = 6
-        }else{
-            v_diffWeek = v_diffWeek-1
-        }
-
-        v_endDate   = Moment(datePicker).add(v_diffWeek , 'day').format('YYYY-MM-DD')
-        let weekCnt     = this.fncWeekCnt(datePicker)
-        this.setState({
-            start_dt   : v_startDate,
-            end_dt     : v_endDate,
-            currentPage : f_week,
-            pagesCount : weekCnt 
-        });
+        v_startDate     = Moment(datePicker).isoWeekday(5).week(weeks +(v_sDiff)).format('YYYY-MM-DD')
+        v_endDate       = Moment(datePicker).isoWeekday(4).week(weeks +(v_eDiff)).format('YYYY-MM-DD')
+    
+        this.handleReportList(weeks ,v_startDate ,v_endDate)
     }
 
-    fncWeekCnt = (datePicker) => {     
-        //해당월에 총 주차를 구한다
-        let dateStr     = Moment(datePicker).format('YYYYMMDD')
-        let year        = Number(dateStr.substring(0, 4));
-        let month       = Number(dateStr.substring(4, 6));
-        let nowDate     = new Date(year, month-1, 1);
-        let lastDate    = new Date(year, month, 0).getDate();
-        let monthSWeek  = nowDate.getDay();
-        let weekSeq     = parseInt((parseInt(lastDate) + monthSWeek - 1)/7);
-        return weekSeq;   
-    }
-
-    handleReportList = () => {
+    handleReportList = (weeks ,v_startDate ,v_endDate) => {
         try {
+
+            this.setState({
+                start_dt    : v_startDate,
+                end_dt      : v_endDate,
+                currentPage : weeks
+            });
+
             let form = new FormData() 
-            form.append('p_week',        this.state.f_week) 
-            axios.post('http://127.0.0.1:5000/weekly_report', form
+            form.append('p_week',        weeks)
+            form.append('p_month',       Moment(v_startDate).format('MM'))
+            form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
+            form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
+            axios.post('http://' + this.state.localhost + '/weekly_report', form
             ).then(response => { 
                 console.log(response)
                 this.setState({
                     LIST        : response.data.LIST,
-                    statusText  : response.statusText
+                    statusText  : response.statusText,
                 });
             });
         } catch (e) {
-            console.log(e);
+            console.log(e)
         }
     }
 
@@ -129,12 +119,7 @@ class ReportHome extends Component{
     }
 
     handlerSelectRow = (rowData) =>{
-        console.log("::rowData::");
-        console.log(rowData);
-        var form_id = Object.getOwnPropertyNames( rowData );
-        console.log("::Object::");
-        console.log(form_id);
-
+        let form_id = Object.getOwnPropertyNames( rowData );
         this.setState({
             EDITING         : true,
             id              : rowData.id, 
@@ -153,7 +138,8 @@ class ReportHome extends Component{
     handleCreate = (e) => {
         e.preventDefault()
         console.log(this.state)
-        const {f_gubun ,f_title ,f_content ,f_document_num ,f_complate ,f_type ,LIST} = this.state
+        const {f_gubun ,f_title ,f_content ,f_document_num ,f_complate ,f_type 
+            ,start_dt ,end_dt ,currentPage ,LIST} = this.state
 
         if(f_gubun ==='' || f_title ==='' || f_content ==='' 
             || f_document_num ==='' || f_complate ==='' || f_type ==='' ){
@@ -169,8 +155,15 @@ class ReportHome extends Component{
             form.append('p_document_num', f_document_num)
             form.append('p_complate',     f_complate)
             form.append('p_type',         f_type)
-            
-            axios.post('http://127.0.0.1:5000/weekly_report_insert', form
+
+  
+            form.append('p_week',         currentPage)
+
+            form.append('p_month',       Moment(start_dt).format('MM'))
+            form.append('p_start_dt',    start_dt.replace(/-/gi,""))  
+            form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
+
+            axios.post('http://' + this.state.localhost + '/weekly_report_insert', form
             ).then(response => { 
                 console.log("::::response::::");
                 console.log(response);
@@ -231,7 +224,7 @@ class ReportHome extends Component{
         let form = new FormData() 
         form.append('id', id) 
 
-        axios.post('http://127.0.0.1:5000/weekly_report_delete', form
+        axios.post('http://' + this.state.localhost + '/weekly_report_delete', form
         ).then(response => { 
             console.log(response);
             if(response.data ==='Y'){
@@ -261,7 +254,7 @@ class ReportHome extends Component{
         form.append('p_complate'      ,chgData.complate)
         form.append('p_type'          ,chgData.type)
 
-        axios.post('http://127.0.0.1:5000/weekly_report_update', form
+        axios.post('http://' + this.state.localhost + ':5000/weekly_report_update', form
         ).then(response => { 
             console.log("::::response:1::::")
             console.log(this.state)
@@ -330,30 +323,25 @@ class ReportHome extends Component{
         }
     }
 
+    //달력 선택시
     onDateChange = ( startDate) => {
-        console.log(startDate)
         this.setState({date : startDate})
         function pad(num) {
             num = num + '';
             return num.length < 2 ? '0' + num : num;
         }
         let datePicker = startDate.getFullYear() + pad(startDate.getMonth()+1) + pad(startDate.getDate());
-        console.log("::dates::");
-        console.log(datePicker);
         this.setState({
             select_dt : datePicker
         })
-        this.fncWeekDate(0 ,datePicker)
+        this.fncWeekDate(this.state.currentPage ,datePicker ,"CAL")
 
     }
 
+    //버튼클릭시
     handlerPagingClick = (e ,index) =>{
         e.preventDefault();
-        this.setState({
-            currentPage: index,
-            f_week : index
-        });
-        this.fncWeekDate(index ,this.state.select_dt)
+        this.fncWeekDate(index ,this.state.select_dt , "BTN")
     }
 
     render(){
@@ -431,10 +419,12 @@ class ReportHome extends Component{
                             {renderOptions(options.week)}
                         </Form.Control> 
                     </Form.Group>  */}
-                    <div style={{ width: '40px'  ,marginLeft : "20px"   ,marginRight : "5px" ,marginTop : "5px" ,float : "left"}}>주차 : </div>
-                    <div style={{ width: '200px' ,marginRight : "450px" ,marginTop : "15px" ,float : "right"}}>{this.state.start_dt} ~ {this.state.end_dt}</div>
-                    <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
+                    {/* <div style={{ width: '40px'  ,marginLeft : "20px"   ,marginRight : "5px" ,marginTop : "5px" ,float : "left"}}>주차 : </div>
+                    <div style={{ width: '200px' ,marginRight : "450px" ,marginTop : "15px" ,float : "right"}}>{this.state.start_dt} ~ {this.state.end_dt}</div> */}
+                    <div style={{ width: '300px'  ,marginLeft : "300px"  ,float : "left"}} >
+                        <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
+                </div>
                 <Form > 
                 <Table striped bordered hover size="sm">
                     <tbody>
