@@ -25,7 +25,7 @@ const ListPaging = (props ) => {
                     </PaginationLink>
                 </PaginationItem>
                 )} */}
-                <div style={{ margin: '5px 20px 0px 20px'  }} >{props.data.start_dt} ~ {props.data.end_dt}</div>
+                <div style={{ margin: '5px 20px 0px 20px'  }} ><p className="font-weight-bold">{props.data.start_dt} ~ {props.data.end_dt}</p></div>
                 {/* <PaginationItem disabled={currentPage >= pagesCount - 1}> */}
                 <PaginationItem>  
                     <PaginationLink next href="#"  onClick={e => props.onPagingClick(e, currentPage + 1)} />

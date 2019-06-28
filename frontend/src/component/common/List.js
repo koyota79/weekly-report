@@ -26,7 +26,7 @@ const List = (props ) => {
             <tbody>
                 {
                     props.data.LIST.map((item,i) => (
-                        <tr key={i}>
+                        <tr key={i} className={(props.data.EDITING && props.data.id===item.id)?"upd-corlor":""}> 
                             <td>{i+1}</td>
                             {
                                 Object.getOwnPropertyNames( props.data.LIST[0]).map((keyObj ,n) => {

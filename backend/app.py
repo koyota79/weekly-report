@@ -59,10 +59,10 @@ def weeklyList():
 def insertWeeklyReport():
   if request.method == 'POST':
      v_user_id       = "kim" #request.form.get('user_id', None)
-     v_year          = "2019" #request.form.get('year', None)
+     v_year          = request.form.get('p_year', None)
      v_month         = request.form.get('p_month', None)
      v_start_dt      = request.form.get('p_start_dt', None)
-     v_week          = "4" #request.form.get('week', None)
+     v_week          = request.form.get('p_week', None)
      v_gubun         = request.form.get('p_gubun', None)
      v_document_num  = request.form.get('p_document_num', None)
      v_content       = request.form.get('p_content', None)
@@ -150,7 +150,8 @@ def updateWeeklyReport():
 
 
 if __name__ == '__main__':
-  app.run(debug=True)
-
+  app.run(host="0.0.0.0", port="5000" ,debug=True)
 
   #SELECT FLOOR((DATE_FORMAT(now(),'%d')+(DATE_FORMAT(DATE_FORMAT(now(),'%Y%m%01'),'%w')-1))/7)+1 WEEK_OF_MONTH;
+
+

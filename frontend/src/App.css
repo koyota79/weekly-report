@@ -23,6 +23,10 @@
   color: #61dafb;
 }
 
+.upd-corlor{
+  background-color: #fb8e8e !important
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
