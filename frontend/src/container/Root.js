@@ -1,32 +1,47 @@
 
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.css';
-import { Route } from 'react-router-dom';
-import { BrowserRouter } from 'react-router-dom';
+//import { Router, Route,  browserHistory } from 'react-router';
+import {  BrowserRouter, Route ,Switch} from 'react-router-dom';
 import Header from '../component/Header';
 //import Gnb from '../component/Gnb';
 
-import { Container, Row } from 'reactstrap';
-
-import Report from '../report/ReportHome'; 
+import { Container } from 'reactstrap';
+import { Provider } from 'react-redux';
+import configureStore from '../store/ConfigureStore';
+import '../App.css';
+import Report from '../report/ReportHome';
+import Login from '../login/Login';  
 import Main from './Main';
+//import { Row } from 'react-bootstrap';
+const store = configureStore();
 
 class Root extends Component {
     render() {
         return (
             <div>
-                <BrowserRouter>
-                    <Container style={{ maxWidth: '1300px'}} >
-                        <Header />  
+                <Provider store={store}>
+                    <BrowserRouter>
+                        <Container style={{ maxWidth: '1300px'}} >     
+                            <Header/>
+                            <Switch>
+                                <Route exact path="/"    component={Main}/>  
+                                <Route path="/report"    component={Report}/> 
+                                <Route path="/Login"     component={Login}/> 
+                            </Switch>
+                        </Container> 
+                    </BrowserRouter>             
+                </Provider>
+
+                {/* <Provider store={store}>
+                    <BrowserRouter>
+                        <Header/>
                         <Row>
-                        {/* <Col sm={2}><Gnb /></Col> */}
-                               
-                                    <Route exact path="/"   component={Main}/>
-                                    <Route path="/report"   component={Report}/>
-                              
+                        <Route exact path="/"    component={Main}/>  
+                        <Route path="/report"   component={Report}/> 
                         </Row>
-                    </Container>   
-                </BrowserRouter>             
+                    </BrowserRouter>
+                </Provider> */}
             </div>
         );
     }

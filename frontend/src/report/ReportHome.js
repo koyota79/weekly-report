@@ -41,6 +41,9 @@ class ReportHome extends Component{
     componentDidMount() {
         console.log(__dirname)
         this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
+        const { user } = this.props;
+        console.log(":::user:::")
+        console.log(user)
     }
 
     fncWeekDate = (currentWeek ,datePicker ,gubun) =>{
@@ -74,13 +77,6 @@ class ReportHome extends Component{
 
     handleReportList = (weeks ,v_startDate ,v_endDate) => {
         try {
-
-            this.setState({
-                start_dt    : v_startDate,
-                end_dt      : v_endDate,
-                currentPage : weeks
-            });
-
             function getWeekNo(v_date_str) {
                 var date = new Date();
                 if(v_date_str){
@@ -88,16 +84,25 @@ class ReportHome extends Component{
                 }
                 return Math.ceil(date.getDate() / 7);
             }
+            let v_currWeek  = getWeekNo(v_startDate)
+            this.setState({
+                start_dt    : v_startDate,
+                end_dt      : v_endDate,
+                currentPage : weeks,
+                currentWeek : v_currWeek
+            });
+
+      
     
             console.log("몇주인지 ::"+getWeekNo(v_startDate))
 
             let form = new FormData() 
             form.append('p_year',        Moment(v_startDate).format('YYYY'))
             form.append('p_month',       Moment(v_startDate).format('MM'))
-            form.append('p_week',        getWeekNo(v_startDate))
+            form.append('p_week',        v_currWeek)
             form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
             form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
-            axios.post('http://' + this.state.api_url + '/weekly_report', form
+            axios.post(this.state.api_url + '/weekly_report', form
             ).then(response => { 
                 console.log(response)
                 this.setState({
@@ -118,7 +123,7 @@ class ReportHome extends Component{
             f_document_num    : "",
             f_title           : "",
             f_content         : "",
-            f_complate        : "",
+            f_complete        : "",
             f_type            : "",
             EDITING           : false
         })
@@ -134,7 +139,7 @@ class ReportHome extends Component{
             f_document_num  : rowData.document_num,
             f_title         : rowData.title,
             f_content       : rowData.content,
-            f_complate      : rowData.complate,
+            f_complete      : rowData.complete,
             f_type          : rowData.type,
              FORM_ID        : form_id
         });
@@ -143,11 +148,11 @@ class ReportHome extends Component{
     handleCreate = (e) => {
         try {
             e.preventDefault()
-            const {f_gubun ,f_title ,f_content ,f_document_num ,f_complate ,f_type 
-                ,start_dt ,end_dt ,currentPage ,LIST} = this.state
+            const {f_gubun ,f_title ,f_content ,f_document_num ,f_complete ,f_type 
+                ,start_dt ,end_dt ,currentWeek ,LIST} = this.state
 
             if(f_gubun ==='' || f_title ==='' || f_content ==='' 
-                || f_document_num ==='' || f_complate ==='' || f_type ==='' ){
+                || f_document_num ==='' || f_complete ==='' || f_type ==='' ){
                 alert('필수사항 미입력')
                 return
             }
@@ -157,16 +162,16 @@ class ReportHome extends Component{
             form.append('p_title',        f_title) 
             form.append('p_content',      f_content)
             form.append('p_document_num', f_document_num)
-            form.append('p_complate',     f_complate)
+            form.append('p_complete',     f_complete)
             form.append('p_type',         f_type)
 
-            form.append('p_week',         currentPage)
-
+            form.append('p_week',        currentWeek)
+            form.append('p_year',        Moment(start_dt).format('YYYY'))
             form.append('p_month',       Moment(start_dt).format('MM'))
             form.append('p_start_dt',    start_dt.replace(/-/gi,""))  
             form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
 
-            axios.post('http://' + this.state.api_url + '/weekly_report_insert', form
+            axios.post(this.state.api_url + '/weekly_report_insert', form
             ).then(response => { 
                 console.log("::::response::::");
                 console.log(response);
@@ -178,7 +183,7 @@ class ReportHome extends Component{
                         f_document_num    : "",
                         f_title           : "",
                         f_content         : "",
-                        f_complate        : "",
+                        f_complete        : "",
                         f_type            : "",
                         statusText        : response.statusText,
                         EDITING           : false,
@@ -189,7 +194,7 @@ class ReportHome extends Component{
                             document_num    : f_document_num,
                             title           : f_title,
                             content         : f_content,
-                            complate        : f_complate,
+                            complete        : f_complete,
                             type            : f_type 
                         })
                     })
@@ -211,7 +216,9 @@ class ReportHome extends Component{
         this.setState({
             [e.target.id] : e.target.value
         });
-     }
+    }
+
+
     handleRemove = (id) => { 
         try{
             const { LIST } = this.state;
@@ -219,7 +226,7 @@ class ReportHome extends Component{
             let form = new FormData() 
             form.append('id', id) 
 
-            axios.post('http://' + this.state.api_url + '/weekly_report_delete', form
+            axios.post(this.state.api_url + '/weekly_report_delete', form
             ).then(response => { 
                 console.log(response);
                 if(response.data ==='Y'){
@@ -234,10 +241,8 @@ class ReportHome extends Component{
         } catch (e) {
             alert(e)
         }
-
     }
-
-    
+ 
     handleUpdate = (id,chgData) => {
         try{
             const { LIST } = this.state;
@@ -250,10 +255,10 @@ class ReportHome extends Component{
             form.append('p_title'         ,chgData.title) 
             form.append('p_content'       ,chgData.content)
             form.append('p_document_num'  ,chgData.document_num)
-            form.append('p_complate'      ,chgData.complate)
+            form.append('p_complete'      ,chgData.complete)
             form.append('p_type'          ,chgData.type)
 
-            axios.post('http://' + this.state.api_url + '/weekly_report_update', form
+            axios.post(this.state.api_url + '/weekly_report_update', form
             ).then(response => { 
                 console.log("::::response:1::::")
                 console.log(this.state)
@@ -267,7 +272,7 @@ class ReportHome extends Component{
                         f_document_num    : "",
                         f_title           : "",
                         f_content         : "",
-                        f_complate        : "",
+                        f_complete        : "",
                         f_type            : "",
                         statusText        : response.statusText,
                         EDITING           : false,
@@ -318,7 +323,7 @@ class ReportHome extends Component{
             title         : this.state.f_title,
             content       : this.state.f_content,
             document_num  : this.state.f_document_num,
-            complate      : this.state.f_complate,
+            complete      : this.state.f_complete,
             type          : this.state.f_type
           });
         }
@@ -346,8 +351,8 @@ class ReportHome extends Component{
     }
 
     render(){
-        const {f_gubun ,f_document_num ,f_title ,f_content ,f_complate ,f_type ,EDITING} = this.state
-        const options = {week : [] ,gubun : [] ,complate : [] ,type : []}
+        const {f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,EDITING} = this.state
+        const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
 
 
         options.gubun.push(
@@ -357,7 +362,7 @@ class ReportHome extends Component{
             {name:'MIS'     ,value:'MIS'}
         )
 
-        options.complate.push(
+        options.complete.push(
             {name:'완료여부' ,value:''},
             {name:'진행중'   ,value:'진행중'},
             {name:'완료'     ,value:'완료'}
@@ -415,61 +420,55 @@ class ReportHome extends Component{
                             />
     
                     </div>
-                    {/* <Form.Group controlId='f_week' style={{ width: '100px' ,marginLeft : "20px" ,float : "left"}}> 
-                        <Form.Control as="select" className="fontSize_13" onChange={this.handleChange} value={this.state.f_week ||''} >
-                            {renderOptions(options.week)}
-                        </Form.Control> 
-                    </Form.Group>  */}
-                    {/* <div style={{ width: '40px'  ,marginLeft : "20px"   ,marginRight : "5px" ,marginTop : "5px" ,float : "left"}}>주차 : </div>
-                    <div style={{ width: '200px' ,marginRight : "450px" ,marginTop : "15px" ,float : "right"}}>{this.state.start_dt} ~ {this.state.end_dt}</div> */}
+
                     <div style={{ width: '300px'  ,marginLeft : "300px"  ,float : "left"}} >
                         <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
                 </div>
                 <Form > 
-                <Table striped bordered hover size="sm"  >
-                    <tbody>
-                        <tr>
-                            <td style={{ width: '120px' ,textAlign : "center"}}>
-                                <Form.Group controlId='f_gubun'> 
-                                    <Form.Control as="select" className="fontSize_13"  onChange={this.handleChange} value={f_gubun ||''} >
-                                        {renderOptions(options.gubun)}
-                                    </Form.Control> 
-                                </Form.Group>                            
-                            </td>
-                            <td style={{ width: '200px' ,textAlign : "center"}}>    
-                                <Form.Group controlId="f_document_num">
-                                    <Form.Control placeholder="문서번호" className="fontSize_13" onChange={this.handleChange}  value={f_document_num ||''} />
-                                </Form.Group>
-                            </td>
-                            <td style={{ width: '300px' ,textAlign : "center"}}>
-                                <Form.Group controlId="f_title">
-                                    <Form.Control placeholder="요청사항" ref={(input) => { this.inputform = input; }}   className="fontSize_13" onChange={this.handleChange}  value={f_title ||''} />
-                                </Form.Group>
-                            </td>
-                            <td style={{ width: '0px' ,textAlign : "center"}}>
-                                <Form.Group>
-                                    {/* <Form.Control placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} /> */}
-                                    <Input type="textarea" name="f_content" id="f_content"   placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} />
-                                </Form.Group>
-                            </td>
-                            <td style={{ width: '120px' ,textAlign : "center"}}>
-                                <Form.Group controlId="f_complate">
-                                    <Form.Control as="select" placeholder="완료여부" className="fontSize_13" onChange={this.handleChange}  value={f_complate ||''} >
-                                        {renderOptions(options.complate)}
-                                    </Form.Control>
-                                </Form.Group>
-                            </td>
-                            <td style={{ width: '80px' ,textAlign : "center"}}>
-                                <Form.Group controlId="f_type">
-                                    <Form.Control as="select" placeholder="유형" className="fontSize_13 width_75" onChange={this.handleChange}  value={f_type ||''} >
-                                        {renderOptions(options.type)}
-                                    </Form.Control>                                    
-                                </Form.Group>
-                            </td>                            
-                        </tr>
-                    </tbody>
-                </Table>
+                    <Table striped bordered hover size="sm"  >
+                        <tbody>
+                            <tr>
+                                <td style={{ width: '120px' ,textAlign : "center"}}>
+                                    <Form.Group controlId='f_gubun'> 
+                                        <Form.Control as="select" className="fontSize_13"  onChange={this.handleChange} value={f_gubun ||''} >
+                                            {renderOptions(options.gubun)}
+                                        </Form.Control> 
+                                    </Form.Group>                            
+                                </td>
+                                <td style={{ width: '200px' ,textAlign : "center"}}>    
+                                    <Form.Group controlId="f_document_num">
+                                        <Form.Control placeholder="문서번호" className="fontSize_13" onChange={this.handleChange}  value={f_document_num ||''} />
+                                    </Form.Group>
+                                </td>
+                                <td style={{ width: '300px' ,textAlign : "center"}}>
+                                    <Form.Group controlId="f_title">
+                                        <Form.Control placeholder="요청사항" ref={(input) => { this.inputform = input; }}   className="fontSize_13" onChange={this.handleChange}  value={f_title ||''} />
+                                    </Form.Group>
+                                </td>
+                                <td style={{ width: '0px' ,textAlign : "center"}}>
+                                    <Form.Group>
+                                        {/* <Form.Control placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} /> */}
+                                        <Input type="textarea" name="f_content" id="f_content"   placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} />
+                                    </Form.Group>
+                                </td>
+                                <td style={{ width: '120px' ,textAlign : "center"}}>
+                                    <Form.Group controlId="f_complete">
+                                        <Form.Control as="select" placeholder="완료여부" className="fontSize_13" onChange={this.handleChange}  value={f_complete ||''} >
+                                            {renderOptions(options.complete)}
+                                        </Form.Control>
+                                    </Form.Group>
+                                </td>
+                                <td style={{ width: '80px' ,textAlign : "center"}}>
+                                    <Form.Group controlId="f_type">
+                                        <Form.Control as="select" placeholder="유형" className="fontSize_13 width_75" onChange={this.handleChange}  value={f_type ||''} >
+                                            {renderOptions(options.type)}
+                                        </Form.Control>                                    
+                                    </Form.Group>
+                                </td>                            
+                            </tr>
+                        </tbody>
+                    </Table>
                 </Form > 
 
                 { this.state.statusText==="OK" ? (
