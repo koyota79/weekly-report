@@ -2,12 +2,12 @@
 from flask import Flask, request
 from flaskext.mysql import MySQL
 from flask_cors import CORS
-from collections import OrderedDict
+
 import json
 # import socket
 # _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # _socket.connect(('26.2.111.149', 5000))
-
+#https://pynative.com/python-mysql-select-query-to-fetch-data/
 
 
 app = Flask(__name__)
@@ -15,12 +15,65 @@ CORS(app)
 mysql = MySQL()
 
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'akfldkelql123!'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'akfldkelql!'
 app.config['MYSQL_DATABASE_DB'] = 'report'
 app.config['MYSQL_DATABASE_HOST'] = '127.0.0.1'
 app.config['MYSQL_DATABASE_PORT'] = 3306
 
 mysql.init_app(app)
+
+
+
+
+@app.route('/login' ,methods=["POST"]) 
+def userLogin():
+   
+   if request.method == 'POST':
+      v_isTrue = False
+
+      try:
+         v_userId        = request.form.get('p_userId', None)
+         v_password      = request.form.get('p_password', None)
+
+         print(":::::::userLogin::::::::")
+         print(v_userId)
+         print(v_password)
+         
+         v_query  = "select user_id ,password  from member where user_id =%s and password=%s "
+         v_param  = (v_userId ,v_password)
+         #list     = ExecuteQuery(v_query,v_param)
+         cur = mysql.connect().cursor()
+         cur.execute(v_query, v_param)
+         print("11111111111111111111")
+         record = cur.fetchone()
+         print(record)
+         if record == None : 
+            v_isTrue = False 
+         else : 
+            v_isTrue = True
+         
+      except Exception as e:  
+            print("Exception ::")
+            v_isTrue = False
+            print(e)
+      finally:
+            cur.close()
+            print("MySQL connection is closed")
+            if v_isTrue :
+               v_result = json.dumps({
+               "loginYn"   : "Y",
+               "msg"       : "로그인 성공."
+               })
+            else :
+               v_result = json.dumps({
+               "loginYn"   : "N",
+               "msg"       : "등록된 아이디가 없습니다."
+               })
+
+      return v_result
+   else :
+      return "N"
+
 
 
 def ExecuteQuery(sql,param):
@@ -44,7 +97,7 @@ def weeklyList():
       print(v_month)
       print(v_start_dt)
       
-      v_query = "select id, gubun, document_num, title ,content ,complate ,type from weekly_report where user_id =%s and started=%s "
+      v_query = "select id, gubun, document_num, title ,content ,complete ,type from weekly_report where user_id =%s and started=%s "
       v_param = ("kim",v_start_dt)
       list = ExecuteQuery(v_query,v_param)
       v_result = json.dumps({
@@ -67,14 +120,14 @@ def insertWeeklyReport():
      v_document_num  = request.form.get('p_document_num', None)
      v_content       = request.form.get('p_content', None)
      v_title         = request.form.get('p_title', None)
-     v_complate      = request.form.get('p_complate', None)
+     v_complete      = request.form.get('p_complete', None)
      v_type          = request.form.get('p_type', None)
   
      con     = mysql.connect()
      cursor  = con.cursor()
-     query   = "INSERT INTO weekly_report (user_id ,started ,year ,month ,week ,gubun, document_num, title ,content ,complate ,type)"
+     query   = "INSERT INTO weekly_report (user_id ,started ,year ,month ,week ,gubun, document_num, title ,content ,complete ,type)"
      query   +="VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-     values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num , v_content ,v_title ,v_complate ,v_type)
+     values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num , v_content ,v_title ,v_complete ,v_type)
      cursor.execute(query, values)
      v_insertId = con.insert_id()
      con.commit()
@@ -126,13 +179,13 @@ def updateWeeklyReport():
      v_document_num  = request.form.get('p_document_num', None)
      v_content       = request.form.get('p_content', None)
      v_title         = request.form.get('p_title', None)
-     v_complate      = request.form.get('p_complate', None)
+     v_complete      = request.form.get('p_complete', None)
      v_type          = request.form.get('p_type', None)
   
      con     = mysql.connect()
      cursor  = con.cursor()
-     query   = "UPDATE weekly_report SET gubun = %s ,document_num = %s ,content = %s ,title = %s ,complate = %s ,type = %s WHERE id = %s "
-     values  = (v_gubun ,v_document_num , v_content ,v_title ,v_complate ,v_type ,v_id)
+     query   = "UPDATE weekly_report SET gubun = %s ,document_num = %s ,content = %s ,title = %s ,complete = %s ,type = %s WHERE id = %s "
+     values  = (v_gubun ,v_document_num , v_content ,v_title ,v_complete ,v_type ,v_id)
      cursor.execute(query, values)
      con.commit()
      con.close()
