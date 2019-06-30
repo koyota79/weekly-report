@@ -1,0 +1,7 @@
+
+git pull origin master 충돌시
+
+git stash 임시저장
+git pull 
+
+git stash pop 임시저장 내용을 
