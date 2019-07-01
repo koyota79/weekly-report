@@ -31,6 +31,7 @@ CREATE TABLE `member` (
 	`user_id` VARCHAR(200) NULL DEFAULT '0',
 	`password` VARCHAR(255) NULL DEFAULT '0',
 	`name` VARCHAR(100) NULL DEFAULT '0',
+	`levels` INT(1) NULL DEFAULT NULL,
 	PRIMARY KEY (`id`),
 	INDEX `rpt_member_idx1` (`user_id`)
 )

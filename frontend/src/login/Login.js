@@ -4,7 +4,7 @@ import { Button,  FormGroup, FormControl ,FormLabel ,Form } from "react-bootstra
 import { connect } from 'react-redux';
 import { loginRequest } from '../action/LoginProc';
 //import  Authentication from '../component/Authentication';
-import { Redirect  } from 'react-router-dom';
+//import { Redirect  } from 'react-router-dom';
 
 //yarn add redux react-redux
 function FieldGroup({ id, label, help, ...props }) {
@@ -171,7 +171,9 @@ validateForm() {
         const {isSuccess ,result} = this.props.callback
 
         if(isSuccess && result.loginYn ==="Y"){
-          this.props.history.push('/')
+          localStorage.setItem("loggedInfo", "Y");
+          window.location.pathname = "/"
+          //this.props.history.push('/')
         }else{
           alert(result.msg)
           this.setState({
@@ -185,7 +187,7 @@ validateForm() {
 
   render(){
     //const {isSuccess ,result} = this.props.callback;
-
+    console.log(":::LOGIN:::::")
     //console.log(this.props)
     return (
       // isSuccess?<Redirect to="/"/>:

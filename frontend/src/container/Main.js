@@ -8,10 +8,9 @@ class Main extends Component{
     render(){
         console.log("MAIN")
         console.log(this.props)
-        const {isTrue} = this.state
         return ( 
             <div>
-            Main   {/*  {isTrue?"Main":<Redirect to="/login"/>  }      */}
+                Main
             </div>
         )
     }

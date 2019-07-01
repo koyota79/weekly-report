@@ -1,8 +1,9 @@
 
-from flask import Flask, request
+from flask import Flask, request ,session , url_for ,escape ,redirect
 from flaskext.mysql import MySQL
 from flask_cors import CORS
-
+from login.loginManager import loginManager
+import os
 import json
 # import socket
 # _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -15,65 +16,14 @@ CORS(app)
 mysql = MySQL()
 
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'akfldkelql!'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'akfldkelql123!'
 app.config['MYSQL_DATABASE_DB'] = 'report'
 app.config['MYSQL_DATABASE_HOST'] = '127.0.0.1'
 app.config['MYSQL_DATABASE_PORT'] = 3306
+app.config['SECRET_KEY'] = b'_5#y2L"F4Q8z\n\xec]/' #os.urandom(12)
 
+#app.secret_key = os.urandom(12)
 mysql.init_app(app)
-
-
-
-
-@app.route('/login' ,methods=["POST"]) 
-def userLogin():
-   
-   if request.method == 'POST':
-      v_isTrue = False
-
-      try:
-         v_userId        = request.form.get('p_userId', None)
-         v_password      = request.form.get('p_password', None)
-
-         print(":::::::userLogin::::::::")
-         print(v_userId)
-         print(v_password)
-         
-         v_query  = "select user_id ,password  from member where user_id =%s and password=%s "
-         v_param  = (v_userId ,v_password)
-         #list     = ExecuteQuery(v_query,v_param)
-         cur = mysql.connect().cursor()
-         cur.execute(v_query, v_param)
-         print("11111111111111111111")
-         record = cur.fetchone()
-         print(record)
-         if record == None : 
-            v_isTrue = False 
-         else : 
-            v_isTrue = True
-         
-      except Exception as e:  
-            print("Exception ::")
-            v_isTrue = False
-            print(e)
-      finally:
-            cur.close()
-            print("MySQL connection is closed")
-            if v_isTrue :
-               v_result = json.dumps({
-               "loginYn"   : "Y",
-               "msg"       : "로그인 성공."
-               })
-            else :
-               v_result = json.dumps({
-               "loginYn"   : "N",
-               "msg"       : "등록된 아이디가 없습니다."
-               })
-
-      return v_result
-   else :
-      return "N"
-
 
 
 def ExecuteQuery(sql,param):
@@ -85,6 +35,72 @@ def ExecuteQuery(sql,param):
 
   #results =  cur.fetchall()
   return results
+
+
+@app.route('/')
+def index():
+    if 'userId' in session:
+        return 'Logged in as %s' % escape(session['userId'])
+    return 'You are not logged in'
+
+
+@app.route('/login' ,methods=["POST"]) 
+def login():
+   #app.secret_key = os.urandom(12)
+   if request.method == 'POST':
+         v_userId        = request.form.get('p_userId', None)
+         v_password      = request.form.get('p_password', None)
+
+         print(":::::::userLogin::::::::")
+         print(v_userId)
+         print(v_password)
+         
+         #LoginManager.loginCheck(v_userId ,v_password) 
+         print(loginManager.__name__)
+         cux = mysql.connect()
+         retChk = loginManager().loginCheck(cux ,v_userId ,v_password)
+         cux.close()
+
+         # cur = mysql.connect().cursor()
+         # v_query  = "select count(1) from member where user_id =%s and password=%s "
+         # v_param  = (v_userId ,v_password)
+         # cur.execute(v_query, v_param)
+         # record = cur.fetchone()
+         # print(record)
+
+         if retChk ==  "Y" : 
+            session.permanent = True
+            #app.permanent_session_lifetime = timedelta(minutes=1)
+            session['userId'] = v_userId
+            v_result = json.dumps({
+               "loginYn"   : "Y",
+               "msg"       : "로그인 성공."
+            })
+         else : 
+            v_result = json.dumps({
+               "loginYn"   : "N",
+               "msg"       : "등록된 아이디가 없습니다."
+            })
+
+         #if 'userId' in session:
+
+         print(":::SESSION11111::::")
+         userId = session['userId']
+         print(":::SESSION22222222::::" + userId)
+
+         #return redirect(url_for('index'))
+         return v_result
+   else :
+         return "N"
+
+@app.route('/logout')
+def logout():
+      session.clear()
+      v_result = json.dumps({
+         "loggedIn"  : "N" 
+      })
+      return v_result
+
 
 @app.route('/weekly_report' ,methods=["POST"]) 
 def weeklyList():
@@ -111,39 +127,39 @@ def weeklyList():
 @app.route('/weekly_report_insert' ,methods=["POST"])
 def insertWeeklyReport():
   if request.method == 'POST':
-     v_user_id       = "kim" #request.form.get('user_id', None)
-     v_year          = request.form.get('p_year', None)
-     v_month         = request.form.get('p_month', None)
-     v_start_dt      = request.form.get('p_start_dt', None)
-     v_week          = request.form.get('p_week', None)
-     v_gubun         = request.form.get('p_gubun', None)
-     v_document_num  = request.form.get('p_document_num', None)
-     v_content       = request.form.get('p_content', None)
-     v_title         = request.form.get('p_title', None)
-     v_complete      = request.form.get('p_complete', None)
-     v_type          = request.form.get('p_type', None)
+      v_user_id       = "kim" #request.form.get('user_id', None)
+      v_year          = request.form.get('p_year', None)
+      v_month         = request.form.get('p_month', None)
+      v_start_dt      = request.form.get('p_start_dt', None)
+      v_week          = request.form.get('p_week', None)
+      v_gubun         = request.form.get('p_gubun', None)
+      v_document_num  = request.form.get('p_document_num', None)
+      v_content       = request.form.get('p_content', None)
+      v_title         = request.form.get('p_title', None)
+      v_complete      = request.form.get('p_complete', None)
+      v_type          = request.form.get('p_type', None)
   
-     con     = mysql.connect()
-     cursor  = con.cursor()
-     query   = "INSERT INTO weekly_report (user_id ,started ,year ,month ,week ,gubun, document_num, title ,content ,complete ,type)"
-     query   +="VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-     values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num , v_content ,v_title ,v_complete ,v_type)
-     cursor.execute(query, values)
-     v_insertId = con.insert_id()
-     con.commit()
-     con.close()
-     v_result = json.dumps({
+      con     = mysql.connect()
+      cursor  = con.cursor()
+      query   = "INSERT INTO weekly_report (user_id ,started ,year ,month ,week ,gubun, document_num, title ,content ,complete ,type)"
+      query   +="VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+      values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num , v_content ,v_title ,v_complete ,v_type)
+      cursor.execute(query, values)
+      v_insertId = con.insert_id()
+      con.commit()
+      con.close()
+      v_result = json.dumps({
         "result"   : "Y" ,
         "insertId" : v_insertId
-     })
+      })
 
-     return v_result
+      return v_result
   else:
      
-     v_result = json.dumps({
+      v_result = json.dumps({
         result   : "N" 
-     })
-     return v_result
+      })
+      return v_result
 
 
 
@@ -151,18 +167,18 @@ def insertWeeklyReport():
 @app.route('/weekly_report_delete' ,methods=["POST"])
 def deleteWeeklyReport():
   if request.method == 'POST':
-     v_id        = request.form.get('id', None)
-     print(v_id)
+      v_id        = request.form.get('id', None)
+      print(v_id)
 
-     cur     = mysql.connect()
-     query   = "DELETE FROM weekly_report where id = %s"
-     values  = (v_id)
-     cur.cursor().execute(query, values)
-     cur.commit()
-     return 'Y'
+      cur     = mysql.connect()
+      query   = "DELETE FROM weekly_report where id = %s"
+      values  = (v_id)
+      cur.cursor().execute(query, values)
+      cur.commit()
+      return 'Y'
   else:
-     request.args.get('title')
-     return 'N'
+      request.args.get('title')
+      return 'N'
 
 
 
@@ -170,36 +186,36 @@ def deleteWeeklyReport():
 @app.route('/weekly_report_update' ,methods=["POST"])
 def updateWeeklyReport():
   if request.method == 'POST':
-     v_user_id       = "kim" #request.form.get('user_id', None)
-     v_year          = "2019" #request.form.get('year', None)
-     v_month         = "06" #request.form.get('month', None)
-     v_week          = "4" #request.form.get('week', None)
-     v_id            = request.form.get('id', None)
-     v_gubun         = request.form.get('p_gubun', None)
-     v_document_num  = request.form.get('p_document_num', None)
-     v_content       = request.form.get('p_content', None)
-     v_title         = request.form.get('p_title', None)
-     v_complete      = request.form.get('p_complete', None)
-     v_type          = request.form.get('p_type', None)
+      v_user_id       = "kim" #request.form.get('user_id', None)
+      v_year          = "2019" #request.form.get('year', None)
+      v_month         = "06" #request.form.get('month', None)
+      v_week          = "4" #request.form.get('week', None)
+      v_id            = request.form.get('id', None)
+      v_gubun         = request.form.get('p_gubun', None)
+      v_document_num  = request.form.get('p_document_num', None)
+      v_content       = request.form.get('p_content', None)
+      v_title         = request.form.get('p_title', None)
+      v_complete      = request.form.get('p_complete', None)
+      v_type          = request.form.get('p_type', None)
   
-     con     = mysql.connect()
-     cursor  = con.cursor()
-     query   = "UPDATE weekly_report SET gubun = %s ,document_num = %s ,content = %s ,title = %s ,complete = %s ,type = %s WHERE id = %s "
-     values  = (v_gubun ,v_document_num , v_content ,v_title ,v_complete ,v_type ,v_id)
-     cursor.execute(query, values)
-     con.commit()
-     con.close()
-     v_result = json.dumps({
+      con     = mysql.connect()
+      cursor  = con.cursor()
+      query   = "UPDATE weekly_report SET gubun = %s ,document_num = %s ,content = %s ,title = %s ,complete = %s ,type = %s WHERE id = %s "
+      values  = (v_gubun ,v_document_num , v_content ,v_title ,v_complete ,v_type ,v_id)
+      cursor.execute(query, values)
+      con.commit()
+      con.close()
+      v_result = json.dumps({
         "result"   : "Y" 
-     })
+      })
 
-     return v_result
+      return v_result
   else:
      
-     v_result = json.dumps({
+      v_result = json.dumps({
         result   : "N" 
-     })
-     return v_result
+      })
+      return v_result
 
 
 if __name__ == '__main__':
