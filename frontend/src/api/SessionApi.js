@@ -1,6 +1,6 @@
 export const login = (user) => {
     const response = {
-      token: '1a2b3c4d',
+      token: '1a2b3c4dff',
       data: {
         userId: user.userId,
         firstName: 'test',

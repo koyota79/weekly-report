@@ -58,7 +58,7 @@ class Login extends Component {
         block
         onClick={() => this.onSubmit(history)}
         disabled={!this.validateForm()}
-        type="submit">
+        >
         Login
       </Button>
     ));

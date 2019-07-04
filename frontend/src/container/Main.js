@@ -3,6 +3,7 @@ import { Redirect  } from 'react-router-dom';
 import * as sessionActions  from '../action/SessionActions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+//import LogoutButton from '../component/LogoutButton';
 
 class Main extends Component{
     state = {
@@ -10,17 +11,11 @@ class Main extends Component{
     }
     render(){
         console.log("MAIN")
-        const {logout} = sessionActions
-       // console.log(this.props)
-        //console.log(logout)
-        const {history } = this.props
-        console.log(history)
+        console.log(this.props)
         return ( 
             <div>
                 Main
-                <button onClick={() => logout(history)} >
-                    LOGOUT
-                </button>
+              
             </div>
         )
     }

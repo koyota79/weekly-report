@@ -11,6 +11,12 @@ git pull
 
 git stash pop 임시저장 내용을 
 
+브랜치변경후 소스까지 변경
+git checkout -b login_change origin/login_change
+
+브랜치 삭제
+
+git branch -D login_change_new
 
 
     "start": "cross-env NODE_PATH=src/ react-scripts start",

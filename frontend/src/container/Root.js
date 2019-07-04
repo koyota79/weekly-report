@@ -5,11 +5,14 @@ import {  BrowserRouter as Router, Route ,Redirect,Switch} from 'react-router-do
 //import PrivateRoute from 'react-private-route'
 import PrivateRoute from './PrivateRoute';
 import '../App.css';
+import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import Report from '../report/ReportHome';
+//import Report from '../report/ReportHome';
 import Login from '../login/Login';  
 import Main from './Main';
 import PropTypes from 'prop-types';
+import * as sessionActions  from '../action/SessionActions';
+import Header from '../component/Header';
 //import { createBrowserHistory } from "history";
 //const history = createBrowserHistory();
 
@@ -17,6 +20,7 @@ const Root = ({ authenticated, checked }) => (
     <Router>
         { checked &&
         <div>
+            {authenticated?<Header />:""}
             <Switch>
                 <PrivateRoute exact path="/" component={Main} authenticated={authenticated}/>
                 <Route path="/login" component={Login}/>
@@ -38,4 +42,10 @@ const mapState = ({ session }) => ({
   authenticated: session.authenticated
 });
 
-export default connect(mapState)(Root);
+const mapDispatch = (dispatch) => {
+  return {
+    actions: bindActionCreators(sessionActions, dispatch)
+  };
+};
+
+export default connect(mapState ,mapDispatch)(Root);
