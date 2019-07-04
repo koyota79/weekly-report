@@ -1,3 +1,8 @@
+git 충돌시(현재작업내용 임시저장)
+git stash apply 
+
+git stash 제거
+git stash drop
 
 git pull origin master 충돌시
 
@@ -5,3 +10,11 @@ git stash 임시저장
 git pull 
 
 git stash pop 임시저장 내용을 
+
+
+
+    "start": "cross-env NODE_PATH=src/ react-scripts start",
+    "build": "cross-env NODE_PATH=src/ react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+ 
