@@ -47,6 +47,14 @@ def index():
 @app.route('/login' ,methods=["POST"]) 
 def login():
    #app.secret_key = os.urandom(12)
+ 
+   response = {'token' : '' ,
+               'data'  : {
+                       'name'    : '',
+                       'levels'  : 0 ,
+                       'message' : ''  
+                      }
+    }
    if request.method == 'POST':
          v_userId        = request.form.get('p_userId', None)
          v_password      = request.form.get('p_password', None)
@@ -68,28 +76,28 @@ def login():
          # record = cur.fetchone()
          # print(record)
 
-         if retChk ==  "Y" : 
-            session.permanent = True
-            #app.permanent_session_lifetime = timedelta(minutes=1)
-            session['userId'] = v_userId
-            v_result = json.dumps({
-               "loginYn"   : "Y",
-               "msg"       : "로그인 성공."
-            })
+
+         # flask_jwt_extended pyjwt
+         # token: '1a2b3c4dff',
+         #   data: {
+         #    userId  : '',
+         #    name    : '',
+         #    levels  : 1
+         # }
+
+         if retChk[0] > 0 : 
+              response = {
+                'token' : '',
+                'data'  : {
+                            'name'    : retChk[1],
+                            'levels'  : retChk[2] ,
+                            'message' : '로그인 성공.'
+                          }              
+              }
          else : 
-            v_result = json.dumps({
-               "loginYn"   : "N",
-               "msg"       : "등록된 아이디가 없습니다."
-            })
+              response.data = {'message' : '등록된 아이디가 없습니다..'}              
 
-         #if 'userId' in session:
-
-         print(":::SESSION11111::::")
-         userId = session['userId']
-         print(":::SESSION22222222::::" + userId)
-
-         #return redirect(url_for('index'))
-         return v_result
+         return json.dumps(response)
    else :
          return "N"
 

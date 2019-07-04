@@ -4,14 +4,14 @@ import * as sessionApi from '../api/SessionApi';
 export const login = (user, history) => {
   return () => {
     return sessionApi.login(user).then(response => {
+      console.log(":::::SessionAction::::::")
+      console.log(response)
+
       const { token } = response;
-      console.log(":::::SessionAction:::::[token]:"+token)
-      sessionService.saveSession({ token })
-      .then(() => {        
+      sessionService.saveSession({ token }).then(() => {        
         console.log(":::::saveSession::")
         console.log(response.data)
-        sessionService.saveUser(response.data)
-        .then(() => {
+        sessionService.saveUser(response.data).then(() => {
           history.push('/');
         }).catch(err => console.error(err));
       }).catch(err => console.error(err));
