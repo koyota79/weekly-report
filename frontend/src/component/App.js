@@ -1,15 +1,31 @@
 import React from 'react';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { connect } from 'react-redux';
+import Home from './Home';
+import Login from './Login';
+import PrivateRoute from './PrivateRoute';
 
-const App = ({ children }) => (
-  <div>
-    {children}
-  </div>
+const App = ({ authenticated, checked }) => (
+  <Router>
+    { checked && 
+      <div>
+        <PrivateRoute exact path="/" component={Home} authenticated={authenticated}/>
+        <Route path="/login" component={Login}/>
+      </div> 
+    }
+  </Router>
 );
 
-// const { object } = PropTypes;
+// const { bool } = PropTypes;
 
 // App.propTypes = {
-//   children: object.isRequired
+//   authenticated: bool.isRequired,
+//   checked: bool.isRequired
 // };
 
-export default App
+const mapState = ({ session }) => ({
+  checked: session.checked,
+  authenticated: session.authenticated
+});
+
+export default connect(mapState)(App);

@@ -2,7 +2,17 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as sessionActions from '../action/SessionAction';
-import Input from './Input';
+import { Button,  FormGroup, FormControl ,FormLabel ,Form } from "react-bootstrap";
+//import Input from './Input';
+
+function FieldGroup({ id, label, help, ...props }) {
+  return (
+    <FormGroup controlId={id}>
+      <FormLabel>{label}</FormLabel>
+      <FormControl {...props} />
+    </FormGroup>
+  );
+}
 
 class Login extends Component {
   constructor(props, context) {
@@ -10,7 +20,7 @@ class Login extends Component {
 
     this.state = {
       user: {
-        email: '',
+        userId: '',
         password: ''
       }
     };
@@ -31,28 +41,59 @@ class Login extends Component {
     user[name] = value;
     this.setState({ user });
   }
-
+  validateForm() {
+    const { user } = this.state;
+    console.log(user)
+    return user.userId.length > 0 && user.password.length > 0;
+  }
   render() {
-    const { user: { email, password } } = this.state;
+    const { user: { userId, password } } = this.state;
 
     return (
-      <div>
-        <h3>LOGIN</h3>
-        <Input
-          name="email"
-          value={email}
-          label="Email"
-          type="email"
-          onChange={this.onChange}
-        />
-        <Input
-          name="password"
-          value={password}
-          label="Password"
-          type="password"
-          onChange={this.onChange}
-        />
-        <button onClick={this.onSubmit} type="submit">Submit</button>
+      // <div>
+      //   <h3>LOGIN</h3>
+      //   <Input
+      //     name="email"
+      //     value={email}
+      //     label="Email"
+      //     type="email"
+      //     onChange={this.onChange}
+      //   />
+      //   <Input
+      //     name="password"
+      //     value={password}
+      //     label="Password"
+      //     type="password"
+      //     onChange={this.onChange}
+      //   />
+      //   <button onClick={this.onSubmit} type="submit">Submit</button>
+      // </div>
+      <div className="LoginForm">
+        <Form>
+            <FieldGroup
+                id="userId"
+                type="id"
+                name="userId"
+                value={userId}
+                onChange={this.onChange}
+                placeholder="아이디"
+            />
+            <FieldGroup 
+                id="password" 
+                type="password"
+                name="password"
+                value={password}
+                onChange={this.onChange}
+                placeholder="Password" 
+            />
+            <Button
+                block
+                onClick={this.onSubmit}
+                disabled={!this.validateForm()}
+                type="submit">
+                Login
+            </Button>
+        </Form>
       </div>
     );
   }
