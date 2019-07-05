@@ -2,9 +2,12 @@
 from flask import Flask, request ,session , url_for ,escape ,redirect
 from flaskext.mysql import MySQL
 from flask_cors import CORS
+import logging
 from login.loginManager import loginManager
 import os
 import json
+from flask_jwt_extended import (JWTManager, jwt_required, create_access_token ,get_jwt_identity)
+
 # import socket
 # _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # _socket.connect(('26.2.111.149', 5000))
@@ -20,11 +23,13 @@ app.config['MYSQL_DATABASE_PASSWORD'] = 'akfldkelql123!'
 app.config['MYSQL_DATABASE_DB'] = 'report'
 app.config['MYSQL_DATABASE_HOST'] = '127.0.0.1'
 app.config['MYSQL_DATABASE_PORT'] = 3306
-app.config['SECRET_KEY'] = b'_5#y2L"F4Q8z\n\xec]/' #os.urandom(12)
+#app.config['SECRET_KEY'] = b'_5#y2L"F4Q8z\n\xec]/' #os.urandom(12)
 
 #app.secret_key = os.urandom(12)
 mysql.init_app(app)
 
+app.config['JWT_SECRET_KEY'] = b'_5#y2L"F4Q8z\n\xec]/'
+jwt = JWTManager(app)
 
 def ExecuteQuery(sql,param):
   cur = mysql.connect().cursor()
@@ -37,69 +42,78 @@ def ExecuteQuery(sql,param):
   return results
 
 
-@app.route('/')
-def index():
-    if 'userId' in session:
-        return 'Logged in as %s' % escape(session['userId'])
-    return 'You are not logged in'
-
-
-@app.route('/login' ,methods=["POST"]) 
-def login():
-   #app.secret_key = os.urandom(12)
- 
-   response = {'token' : '' ,
-               'data'  : {
+@app.route('/'  , methods=['POST'])
+@jwt_required
+def index(): 
+    app.logger.debug("::::::index::::::::")
+    current_user = get_jwt_identity()
+    print(current_user)
+    response = {'token' : '' ,
+                'user'  : {
                        'name'    : '',
                        'levels'  : 0 ,
                        'message' : ''  
                       }
     }
-   if request.method == 'POST':
-         v_userId        = request.form.get('p_userId', None)
-         v_password      = request.form.get('p_password', None)
-
-         print(":::::::userLogin::::::::")
-         print(v_userId)
-         print(v_password)
-         
-         #LoginManager.loginCheck(v_userId ,v_password) 
-         print(loginManager.__name__)
-         cux = mysql.connect()
-         retChk = loginManager().loginCheck(cux ,v_userId ,v_password)
-         cux.close()
-
-         # cur = mysql.connect().cursor()
-         # v_query  = "select count(1) from member where user_id =%s and password=%s "
-         # v_param  = (v_userId ,v_password)
-         # cur.execute(v_query, v_param)
-         # record = cur.fetchone()
-         # print(record)
+    return json.dumps(response)
 
 
-         # flask_jwt_extended pyjwt
-         # token: '1a2b3c4dff',
-         #   data: {
-         #    userId  : '',
-         #    name    : '',
-         #    levels  : 1
-         # }
+@app.route('/login' , methods=['POST']) 
+def login():
+      #app.secret_key = os.urandom(12)
+      response = {}
+      try :
+        app.logger.debug(':::::::userLogin::::::::')
+        if request.method == 'POST':
+              v_userId        = request.form.get('p_userId', None)
+              v_password      = request.form.get('p_password', None)
 
-         if retChk[0] > 0 : 
-              response = {
-                'token' : '',
-                'data'  : {
-                            'name'    : retChk[1],
-                            'levels'  : retChk[2] ,
-                            'message' : '로그인 성공.'
-                          }              
-              }
-         else : 
-              response.data = {'message' : '등록된 아이디가 없습니다..'}              
+              
+              app.logger.debug(v_userId)
+              app.logger.debug(v_password)
+              
+              #LoginManager.loginCheck(v_userId ,v_password) 
+              cux = mysql.connect()
+              retChk = loginManager().loginCheck(cux ,v_userId ,v_password)
+              cux.close()
 
-         return json.dumps(response)
-   else :
-         return "N"
+              # cur = mysql.connect().cursor()
+              # v_query  = "select count(1) from member where user_id =%s and password=%s "
+              # v_param  = (v_userId ,v_password)
+              # cur.execute(v_query, v_param)
+              # record = cur.fetchone()
+              # print(record)
+
+
+              # flask_jwt_extended pyjwt
+              # token: '1a2b3c4dff',
+              #   data: {
+              #    userId  : '',
+              #    name    : '',
+              #    levels  : 1
+              # }
+              app.logger.debug("::retChk[0]::::"+ str(retChk[0]))
+              access_token = create_access_token(identity=v_userId)
+              if retChk[0] > 0 : 
+                    response = {
+                      'access_token' : access_token,
+                      'user'         : {
+                                        'status'  :'S', 
+                                        'name'    : retChk[1],
+                                        'levels'  : retChk[2] ,
+                                        'message' : '로그인 성공.'
+                                       }              
+                    }
+              else :         
+                    response = {'access_token' : '' ,'user'  : { 'status' :'E' , 'message' : '등록된 아이디가 없습니다' }}                 
+        else :
+              response = {'access_token' : '' ,'user'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}   
+
+      except Exception as e:  
+            app.logger.debug("Exception_app_login" + str(e)) 
+            response = {'access_token' : '' ,'user'  : { 'status' :'E' , 'message' : str(e) }}   
+
+      return json.dumps(response)
 
 @app.route('/logout')
 def logout():
@@ -110,27 +124,40 @@ def logout():
       return v_result
 
 
-@app.route('/weekly_report' ,methods=["POST"]) 
+@app.route('/weekly_report' ,methods=["GET" ,"POST"]) 
+@jwt_required
 def weeklyList():
-  if request.method == 'POST':
-      v_week         = request.form.get('p_week', None)
-      v_month        = request.form.get('p_month', None)
-      v_start_dt     = request.form.get('p_start_dt', None)
+  try:
+    current_user = get_jwt_identity()
+    return json.dumps({"result"   : "Y"})
 
-      print(":::::::::::::::")
-      print(v_month)
-      print(v_start_dt)
+  except Exception as e:  
+       app.logger.debug("Exception_app_login" + str(e)) 
+  
+  return 'Y'
+  # if request.method == 'POST':
+  #     #current_user = get_jwt_identity()
+  #     #app.logger.debug(current_user)
+  #     v_week         = request.form.get('p_week', None)
+  #     v_month        = request.form.get('p_month', None)
+  #     v_start_dt     = request.form.get('p_start_dt', None)
+
+
+
+  #     print(":::::::::::::::")
+  #     print(v_month)
+  #     print(v_start_dt)
       
-      v_query = "select id, gubun, document_num, title ,content ,complete ,type from weekly_report where user_id =%s and started=%s "
-      v_param = ("kim",v_start_dt)
-      list = ExecuteQuery(v_query,v_param)
-      v_result = json.dumps({
-        "result"   : "Y" ,
-        "LIST"     : list
-      })
-      return v_result
-  else :
-      return "N"
+  #     v_query = "select id, gubun, document_num, title ,content ,complete ,type from weekly_report where user_id =%s and started=%s "
+  #     v_param = ("kim",v_start_dt)
+  #     list = ExecuteQuery(v_query,v_param)
+  #     v_result = json.dumps({
+  #       "result"   : "Y" ,
+  #       "LIST"     : list
+  #     })
+  #     return v_result
+  # else :
+  #     return "N"
 
 @app.route('/weekly_report_insert' ,methods=["POST"])
 def insertWeeklyReport():

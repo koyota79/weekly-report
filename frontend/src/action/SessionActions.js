@@ -6,16 +6,20 @@ export const login = (user, history) => {
     return sessionApi.login(user).then(response => {
       console.log(":::::SessionAction::::::")
       console.log(response)
+      const { access_token ,user} = response.data;
+      if(access_token ==='' && user.status === 'E'){
+        alert(user.message)
+        return
+      }
 
-      const { token } = response;
-      sessionService.saveSession({ token }).then(() => {        
+      sessionService.saveSession({ access_token }).then(() => {        
         console.log(":::::saveSession::")
         console.log(response.data)
         sessionService.saveUser(response.data).then(() => {
           history.push('/');
-        }).catch(err => console.error(err));
-      }).catch(err => console.error(err));
-    });
+        }).catch(err => alert(err));
+      }).catch(err => alert(err));
+    }).catch(err => alert(err));
   };
 };
 

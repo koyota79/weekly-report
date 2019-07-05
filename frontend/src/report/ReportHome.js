@@ -11,6 +11,11 @@ import '../App.css';
 import DatePicker ,{registerLocale} from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import getDay from "date-fns/getDay";
+
+import * as sessionActions  from '../action/SessionActions';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 //npm start .env.development REACT_APP_API_URL=26.2.111.149:5000
@@ -39,7 +44,6 @@ class ReportHome extends Component{
     }
 
     componentDidMount() {
-        console.log(__dirname)
         this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
         const { user } = this.props;
         console.log(":::user:::")
@@ -95,14 +99,26 @@ class ReportHome extends Component{
       
     
             console.log("몇주인지 ::"+getWeekNo(v_startDate))
-
+           
             let form = new FormData() 
             form.append('p_year',        Moment(v_startDate).format('YYYY'))
             form.append('p_month',       Moment(v_startDate).format('MM'))
             form.append('p_week',        v_currWeek)
             form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
             form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
+
+            const {user} = this.props
+            console.log(user.access_token)
+            form.append('access_token',      user.access_token) 
+      
             axios.post(this.state.api_url + '/weekly_report', form
+            ,{
+
+                headers: {
+                    Authorization: user.access_token 
+                  }
+            }
+            
             ).then(response => { 
                 console.log(response)
                 this.setState({
@@ -353,7 +369,10 @@ class ReportHome extends Component{
     render(){
         const {f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,EDITING} = this.state
         const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
-
+        console.log("::REPORT::")
+        console.log(this.props)
+        const {user} = this.props
+        console.log(user.access_token)
 
         options.gubun.push(
             {name:'업무구분' ,value:''},
@@ -481,4 +500,16 @@ class ReportHome extends Component{
         )
     }
 }
-export default ReportHome; 
+//export default ReportHome; 
+const mapState = (state) => ({
+    user: state.session.user,
+    authenticated: state.session.authenticated
+  });
+  
+const mapDispatch = (dispatch) => {
+    return {
+      actions: bindActionCreators(sessionActions, dispatch) 
+    };
+};
+
+export default connect(mapState, mapDispatch)(ReportHome);

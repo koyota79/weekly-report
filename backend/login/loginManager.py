@@ -6,7 +6,7 @@ class loginManager() :
         self.password   = ""
     
     def loginCheck(self ,cux ,user_id ,password) :
-        v_result = null
+        #v_result = null
         try :
             print("::::loginCheck:::::")
             cur = cux.cursor()
@@ -14,10 +14,9 @@ class loginManager() :
             v_param  = (user_id ,password)
             cur.execute(v_query, v_param)
             record = cur.fetchone()
-            print(record)
             v_result = record
         except Exception as e:  
-            print("Exception ::")
+            print("Exception ::login")
             print(e)
 
         return v_result

@@ -7,7 +7,7 @@ import PrivateRoute from './PrivateRoute';
 import '../App.css';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-//import Report from '../report/ReportHome';
+import Report from '../report/ReportHome';
 import Login from '../login/Login';  
 import Main from './Main';
 import PropTypes from 'prop-types';
@@ -20,10 +20,11 @@ const Root = ({ authenticated, checked }) => (
     <Router>
         { checked &&
         <div>
-            {authenticated?<Header />:""}
+            {authenticated?<Header/>:""}
             <Switch>
                 <PrivateRoute exact path="/" component={Main} authenticated={authenticated}/>
                 <Route path="/login" component={Login}/>
+                <Route path="/report" component={Report} authenticated={authenticated}/>
             </Switch>
         </div>
         }
