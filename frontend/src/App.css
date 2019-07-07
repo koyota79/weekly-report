@@ -68,6 +68,9 @@
   width : 75px;
 }
 
+.width_100 {
+  width : 100px;
+}
 
 @media all and (min-width: 480px) {
   .LoginForm {

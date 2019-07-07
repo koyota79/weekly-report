@@ -2,41 +2,47 @@ import React, { Component } from 'react';
 //import Config from 'react-native-config'
 import axios from 'axios';
 import List from '../component/common/List';
+import {cf_fetchPost} from '../component/common/CommonMethod';
 import ListPaging from '../component/common/ListPaging';
 //import Table from 'react-bootstrap/Table';
 import {Form ,Button  ,Table } from 'react-bootstrap';
-import { Input } from 'reactstrap';
+//import { Input } from 'reactstrap';
 import Moment  from 'moment';
 import '../App.css';
 import DatePicker ,{registerLocale} from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import getDay from "date-fns/getDay";
 
+import ReportForm from './ReportForm';
 import * as sessionActions  from '../action/SessionActions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-
+//import * as JWT from 'jwt-decode';
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 //npm start .env.development REACT_APP_API_URL=26.2.111.149:5000
 
 class ReportHome extends Component{
-    state = {
-        HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"내용" ,"완료여부" ,"유형","삭제"], //헤더는 항상 첫번째에 위치
-        H_WIDTH         : ["60","70","200","250","0","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
-        id              : "",
-        gubun           : "",
-        document_num    : "",
-        title           : "",
-        content         : "",
-        api_url         : process.env.REACT_APP_API_URL,
-        LIST            : [],
-        date            : new Date(),
-        currentPage     : Moment().weeks(),
-        start_dt        : Moment().format('YYYY-MM-DD'),      
-        end_dt          : "",
-        EDITING         : false
+    constructor(props) {
+        super(props)
+        this.state =  {
+            HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"내용" ,"완료여부" ,"유형","삭제"], //헤더는 항상 첫번째에 위치
+            H_WIDTH         : ["60","70","200","250","0","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
+            id              : "",
+            gubun           : "",
+            document_num    : "",
+            title           : "",
+            content         : "",
+            api_url         : process.env.REACT_APP_API_URL,
+            LIST            : [],
+            date            : new Date(),
+            currentPage     : Moment().weeks(),
+            start_dt        :  Moment().format('YYYY-MM-DD'),      
+            end_dt          : "",
+            EDITING         : false
+        }
     }
+
 
     isWeekday = date => {
         const day = getDay(date)
@@ -44,10 +50,9 @@ class ReportHome extends Component{
     }
 
     componentDidMount() {
-        this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
-        const { user } = this.props;
-        console.log(":::user:::")
-        console.log(user)
+        setTimeout(() => {
+            this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
+        }, 100)
     }
 
     fncWeekDate = (currentWeek ,datePicker ,gubun) =>{
@@ -68,7 +73,7 @@ class ReportHome extends Component{
         let v_sDiff     = -1//시작일 초기값 (현재날짜의 지난주를 찾기위해 -1)        
         let v_eDiff     = 0 //종료일 초기값      
 
-        if(Moment(datePicker).isoWeekday() >= 5){
+        if(Moment(datePicker).isoWeekday() >= 5 && Moment(datePicker).isoWeekday() < 7){
             v_sDiff = 0
             v_eDiff = 1
         }
@@ -88,6 +93,7 @@ class ReportHome extends Component{
                 }
                 return Math.ceil(date.getDate() / 7);
             }
+
             let v_currWeek  = getWeekNo(v_startDate)
             this.setState({
                 start_dt    : v_startDate,
@@ -96,36 +102,27 @@ class ReportHome extends Component{
                 currentWeek : v_currWeek
             });
 
-      
-    
+            const {user} = this.props
+            console.log("::user.access_token::::::::"+user.access_token)
             console.log("몇주인지 ::"+getWeekNo(v_startDate))
-           
             let form = new FormData() 
             form.append('p_year',        Moment(v_startDate).format('YYYY'))
             form.append('p_month',       Moment(v_startDate).format('MM'))
             form.append('p_week',        v_currWeek)
             form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
             form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
-
-            const {user} = this.props
-            console.log(user.access_token)
-            form.append('access_token',      user.access_token) 
-      
-            axios.post(this.state.api_url + '/weekly_report', form
-            ,{
-
-                headers: {
-                    Authorization: user.access_token 
-                  }
-            }
+            form.append('access_token',  user.access_token) 
+            form.append('url',           this.state.api_url + '/weekly_report') 
             
-            ).then(response => { 
-                console.log(response)
-                this.setState({
-                    LIST        : response.data.LIST,
-                    statusText  : response.statusText,
-                });
-            });
+            cf_fetchPost(form ,this.props).then(result => {
+                result.json().then(json => 
+                    this.setState({
+                        LIST        : json.LIST,
+                        statusText  : 'OK',
+                    }) 
+                )               
+            }).catch(err => alert(err));
+
         } catch (e) {
             alert(e)
         }
@@ -147,7 +144,7 @@ class ReportHome extends Component{
 
     handlerSelectRow = (rowData) =>{
         let form_id = Object.getOwnPropertyNames( rowData );
-        this.inputform.focus();
+        console.log(this.textInput)
         this.setState({
             EDITING         : true,
             id              : rowData.id, 
@@ -173,6 +170,7 @@ class ReportHome extends Component{
                 return
             }
 
+            const {user} = this.props
             let form = new FormData() 
             form.append('p_gubun',        f_gubun) 
             form.append('p_title',        f_title) 
@@ -186,38 +184,71 @@ class ReportHome extends Component{
             form.append('p_month',       Moment(start_dt).format('MM'))
             form.append('p_start_dt',    start_dt.replace(/-/gi,""))  
             form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
+            form.append('url',           this.state.api_url + '/weekly_report_insert')
+            form.append('access_token',  user.access_token) 
 
-            axios.post(this.state.api_url + '/weekly_report_insert', form
-            ).then(response => { 
-                console.log("::::response::::");
-                console.log(response);
-                if(response.data.result ==='Y'){
-                    const v_insertId = response.data.insertId
-                    this.setState({
-                        id                : "",
-                        f_gubun           : "",
-                        f_document_num    : "",
-                        f_title           : "",
-                        f_content         : "",
-                        f_complete        : "",
-                        f_type            : "",
-                        statusText        : response.statusText,
-                        EDITING           : false,
+            cf_fetchPost(form).then(result => {
+                console.log(result)
+                if(result.ok){
+                    result.json().then(json => 
+                        this.setState({
+                            id                : "",
+                            f_gubun           : "",
+                            f_document_num    : "",
+                            f_title           : "",
+                            f_content         : "",
+                            f_complete        : "",
+                            f_type            : "",
+                            statusText        : 'OK',
+                            EDITING           : false,
 
-                        LIST : LIST.concat({
-                            id              : v_insertId,
-                            gubun           : f_gubun,
-                            document_num    : f_document_num,
-                            title           : f_title,
-                            content         : f_content,
-                            complete        : f_complete,
-                            type            : f_type 
+                            LIST : LIST.concat({
+                                id              : json.insertId,
+                                gubun           : f_gubun,
+                                document_num    : f_document_num,
+                                title           : f_title,
+                                content         : f_content,
+                                complete        : f_complete,
+                                type            : f_type 
+                            })
                         })
-                    })
+                    )
                 }else{
-                    alert('등록 실패')
+                    result.json().then(json => alert(json.msg))
                 }
-            });
+            }).catch(err => alert(err))
+
+            // axios.post(this.state.api_url + '/weekly_report_insert', form
+            // ).then(response => { 
+            //     console.log("::::response::::");
+            //     console.log(response);
+            //     if(response.data.result ==='Y'){
+            //         const v_insertId = response.data.insertId
+            //         this.setState({
+            //             id                : "",
+            //             f_gubun           : "",
+            //             f_document_num    : "",
+            //             f_title           : "",
+            //             f_content         : "",
+            //             f_complete        : "",
+            //             f_type            : "",
+            //             statusText        : response.statusText,
+            //             EDITING           : false,
+
+            //             LIST : LIST.concat({
+            //                 id              : v_insertId,
+            //                 gubun           : f_gubun,
+            //                 document_num    : f_document_num,
+            //                 title           : f_title,
+            //                 content         : f_content,
+            //                 complete        : f_complete,
+            //                 type            : f_type 
+            //             })
+            //         })
+            //     }else{
+            //         alert('등록 실패')
+            //     }
+            // });
         } catch (e) {
             alert(e);
         }      
@@ -238,10 +269,8 @@ class ReportHome extends Component{
     handleRemove = (id) => { 
         try{
             const { LIST } = this.state;
-
             let form = new FormData() 
             form.append('id', id) 
-
             axios.post(this.state.api_url + '/weekly_report_delete', form
             ).then(response => { 
                 console.log(response);
@@ -262,9 +291,6 @@ class ReportHome extends Component{
     handleUpdate = (id,chgData) => {
         try{
             const { LIST } = this.state;
-            
-            //if(!EDITING)return
-
             let form = new FormData()
             form.append('id'              ,id)  
             form.append('p_gubun'         ,chgData.gubun) 
@@ -357,7 +383,6 @@ class ReportHome extends Component{
             select_dt : datePicker
         })
         this.fncWeekDate(this.state.currentPage ,datePicker ,"CAL")
-
     }
 
     //버튼클릭시
@@ -367,12 +392,9 @@ class ReportHome extends Component{
     }
 
     render(){
-        const {f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,EDITING} = this.state
+        const {EDITING} = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,
         const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
         console.log("::REPORT::")
-        console.log(this.props)
-        const {user} = this.props
-        console.log(user.access_token)
 
         options.gubun.push(
             {name:'업무구분' ,value:''},
@@ -401,14 +423,6 @@ class ReportHome extends Component{
             {name:'4주차'     ,value:'4'},
             {name:'5주차'     ,value:'5'}
         )
-
-        const renderOptions = (optionsMap) => {
-     
-            return optionsMap.map((i) => {
-                return <option key={i.value} value={i.value}>{i.name}</option>;
-            });
-        };
-
         return ( 
             <div style={{ width: '100%'}}>
                 <div style={{ marginBottom: '15px' ,marginTop: '20px'}}>
@@ -444,51 +458,51 @@ class ReportHome extends Component{
                         <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
                 </div>
-                <Form > 
-                    <Table striped bordered hover size="sm"  >
-                        <tbody>
-                            <tr>
-                                <td style={{ width: '120px' ,textAlign : "center"}}>
-                                    <Form.Group controlId='f_gubun'> 
-                                        <Form.Control as="select" className="fontSize_13"  onChange={this.handleChange} value={f_gubun ||''} >
-                                            {renderOptions(options.gubun)}
-                                        </Form.Control> 
-                                    </Form.Group>                            
-                                </td>
-                                <td style={{ width: '200px' ,textAlign : "center"}}>    
-                                    <Form.Group controlId="f_document_num">
-                                        <Form.Control placeholder="문서번호" className="fontSize_13" onChange={this.handleChange}  value={f_document_num ||''} />
-                                    </Form.Group>
-                                </td>
-                                <td style={{ width: '300px' ,textAlign : "center"}}>
-                                    <Form.Group controlId="f_title">
-                                        <Form.Control placeholder="요청사항" ref={(input) => { this.inputform = input; }}   className="fontSize_13" onChange={this.handleChange}  value={f_title ||''} />
-                                    </Form.Group>
-                                </td>
-                                <td style={{ width: '0px' ,textAlign : "center"}}>
-                                    <Form.Group>
-                                        {/* <Form.Control placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} /> */}
-                                        <Input type="textarea" name="f_content" id="f_content"   placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} />
-                                    </Form.Group>
-                                </td>
-                                <td style={{ width: '120px' ,textAlign : "center"}}>
-                                    <Form.Group controlId="f_complete">
-                                        <Form.Control as="select" placeholder="완료여부" className="fontSize_13" onChange={this.handleChange}  value={f_complete ||''} >
-                                            {renderOptions(options.complete)}
-                                        </Form.Control>
-                                    </Form.Group>
-                                </td>
-                                <td style={{ width: '80px' ,textAlign : "center"}}>
-                                    <Form.Group controlId="f_type">
-                                        <Form.Control as="select" placeholder="유형" className="fontSize_13 width_75" onChange={this.handleChange}  value={f_type ||''} >
-                                            {renderOptions(options.type)}
-                                        </Form.Control>                                    
-                                    </Form.Group>
-                                </td>                            
-                            </tr>
-                        </tbody>
-                    </Table>
-                </Form > 
+                    <ReportForm onChange={this.handleChange} props={this.state} options ={options}  ref={this.textInput} />
+                    {/* <Form > 
+                        <Table striped bordered hover size="sm"  >
+                            <tbody>
+                                <tr>
+                                    <td style={{ width: '120px' ,textAlign : "center"}}>
+                                        <Form.Group controlId='f_gubun'> 
+                                            <Form.Control as="select" className="fontSize_13"  onChange={this.handleChange} value={f_gubun ||''} >
+                                                {renderOptions(options.gubun)}
+                                            </Form.Control> 
+                                        </Form.Group>                            
+                                    </td>
+                                    <td style={{ width: '200px' ,textAlign : "center"}}>    
+                                        <Form.Group controlId="f_document_num">
+                                            <Form.Control placeholder="문서번호" className="fontSize_13" onChange={this.handleChange}  value={f_document_num ||''} />
+                                        </Form.Group>
+                                    </td>
+                                    <td style={{ width: '300px' ,textAlign : "center"}}>
+                                        <Form.Group controlId="f_title">
+                                            <Form.Control placeholder="요청사항" ref={(input) => { this.inputform = input; }}   className="fontSize_13" onChange={this.handleChange}  value={f_title ||''} />
+                                        </Form.Group>
+                                    </td>
+                                    <td style={{ width: '0px' ,textAlign : "center"}}>
+                                        <Form.Group>
+                                            <Input type="textarea" name="f_content" id="f_content"   placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} />
+                                        </Form.Group>
+                                    </td>
+                                    <td style={{ width: '120px' ,textAlign : "center"}}>
+                                        <Form.Group controlId="f_complete">
+                                            <Form.Control as="select" placeholder="완료여부" className="fontSize_13" onChange={this.handleChange}  value={f_complete ||''} >
+                                                {renderOptions(options.complete)}
+                                            </Form.Control>
+                                        </Form.Group>
+                                    </td>
+                                    <td style={{ width: '80px' ,textAlign : "center"}}>
+                                        <Form.Group controlId="f_type">
+                                            <Form.Control as="select" placeholder="유형" className="fontSize_13 width_75" onChange={this.handleChange}  value={f_type ||''} >
+                                                {renderOptions(options.type)}
+                                            </Form.Control>                                    
+                                        </Form.Group>
+                                    </td>                            
+                                </tr>
+                            </tbody>
+                        </Table>
+                    </Form >  */}
 
                 { this.state.statusText==="OK" ? (
                     <List data={this.state} onRemove={this.handleRemove} onDoubleClick={this.handlerSelectRow} />
@@ -501,10 +515,11 @@ class ReportHome extends Component{
     }
 }
 //export default ReportHome; 
+
 const mapState = (state) => ({
     user: state.session.user,
     authenticated: state.session.authenticated
-  });
+});
   
 const mapDispatch = (dispatch) => {
     return {

@@ -9,6 +9,7 @@
     "cross-env": "^5.2.0",
     "dayjs": "^1.8.14",
     "immutable": "^4.0.0-rc.12",
+    "jwt-decode": "^2.2.0",
     "moment": "^2.24.0",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",

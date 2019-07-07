@@ -6,12 +6,12 @@ export const login = (user, history) => {
     return sessionApi.login(user).then(response => {
       console.log(":::::SessionAction::::::")
       console.log(response)
-      const { access_token ,user} = response.data;
-      if(access_token ==='' && user.status === 'E'){
-        alert(user.message)
+      const { access_token ,info} = response.data;
+      if(access_token ==='' && info.status === 'E'){
+        alert(info.message)
         return
       }
-
+      
       sessionService.saveSession({ access_token }).then(() => {        
         console.log(":::::saveSession::")
         console.log(response.data)
@@ -24,11 +24,8 @@ export const login = (user, history) => {
 };
 
 export const logout = (history) => {
-  console.log(":::::logout::::::")
-  console.log(history)
   return () => {
     return sessionApi.logout().then(() => {
-      console.log(":::::deleteSession::::::")
       sessionService.deleteSession();      
       sessionService.deleteUser();
       history.push('/login');

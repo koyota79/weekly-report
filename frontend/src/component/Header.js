@@ -4,14 +4,67 @@ import LogoutButton from '../component/LogoutButton';
 import * as sessionActions  from '../action/SessionActions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import * as JWT from 'jwt-decode';
 
 //{Nav ,Navbar ,Form ,Button ,FormControl}
 //const Header = (props) => {
 class Header extends Component{
+    state = {
+      userName  :''
+    }
+    componentDidMount() {
+      setTimeout(() => {
+        console.log('::::Header:::::')
+        console.log(this.props)
+        const {sessionInfo} = this.props
+        console.log(sessionInfo)
+
+        var access_token = sessionInfo.access_token
+        var jwtDecode    = JWT(access_token);
+        console.log(":::decode1:::::"+jwtDecode)
+        console.log(jwtDecode)
+        const {levels ,name ,userId} = jwtDecode.identity
+
+        let level_class = ''
+        // if(levels === 2){
+        //   level_class = ' (파트장)';
+        // }else if(levels === 3){
+        //   level_class = ' (현장 관리자)';
+        // }else if(levels === 9){
+        //   level_class = ' (슈퍼 관리자)';
+        // }else{
+        //   level_class = ' (과장)';
+        // }
+
+        switch(levels) { 
+          case 2: { 
+             level_class = ' (파트장)';
+             break; 
+          } 
+          case 3: { 
+             level_class = ' (현장 관리자)';
+             break; 
+          }
+          case 9: { 
+             level_class = ' (슈퍼 관리자)';
+             break;    
+          } 
+          default: { 
+             level_class = ' (과장)';
+             break;              
+          } 
+       }
+
+        this.setState({
+          userLevels  : levels,
+          userName    : name + level_class,
+          userId      : userId,
+        })
+      }, 100)
+    }
+
     render(){
-      console.log('::::Header:::::')
-      console.log(this.props)
-      const {user} = this.props.user
+     
       return ( 
           <div>
             <Navbar bg="primary" variant="dark">
@@ -23,7 +76,7 @@ class Header extends Component{
               <Form inline>
                 {/* <FormControl type="text" placeholder="Search" className="mr-sm-2" />
                 <Button variant="outline-light">Search</Button> */}
-                <Navbar.Brand href="">{user?user.name:''}</Navbar.Brand>
+                <Navbar.Brand href="">{this.state.userName}</Navbar.Brand>
                 <LogoutButton Button={Button}/> 
               </Form>
             </Navbar>
@@ -34,7 +87,7 @@ class Header extends Component{
 
 //export default Header;
 const mapState = (state) => ({
-  user: state.session.user,
+  sessionInfo: state.session.user,
   authenticated: state.session.authenticated
 });
 

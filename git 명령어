@@ -19,8 +19,41 @@ git checkout -b login_change origin/login_change
 git branch -D login_change_new
 
 
+git add filename 파일명에 해당 하는 파일을 add 한다.
+
+git add *.c 확장자가 c 파일인 모든 파일을 add 한다.
+
+
+git commit -v "second commit" -v 옵션은 editer 를 열어서 해당 사항을 확인후 커밋할 수 있다. 커밋메시지를 입력하는 화면 아래에 코드 diff가 한 번 더 나오게 된다.
+
+git add -a "third commit" -a 옵션은 git add 를 수행하지 않아도 바로 add 를 수행후에 commit 을 실행 
+
+git commit --amend 이전에 add 된 목록들을 이전 commit 에 포함해서 다시 commit 을 수행해준다. 
+
+git reset HEAD readme 모르고 add 해서 Change to be committd 상태가 되었다면 다시 Staged 된 상태를 unStaged 상태로 변경 
+
+git checkout --readme 수정된 파일을 Untracked 상태로 변경한다.
+
+
+
+https://blog.outsider.ne.kr/1247 (git add -p 상세설명)
+
+git add -i  대화형 깃
+
+
+git add -p를 하면 modified 된 파일의 수정 부분을 단위별로 나누어서 추가할지 안 할지를 물어본다. ? 입력후 상세설명
+y를 누르면 해당 hunk를 스테이징에 추가하고 n을 누르면 추가하지 않고 다음 hunk를 보여준다.. q를 입력하면 add과정을 종료한다.
+
+git이 알아서 hunk의 단위를 나누어 주지만 원하는 것보다 그 단위가 크다면(hunk에 스테이징에 추가할 내용과 아닌 내용이 섞여 있는 경우) s를 입력하면 hunk를 더 잘게 쪼개준다
+
+
+
     "start": "cross-env NODE_PATH=src/ react-scripts start",
     "build": "cross-env NODE_PATH=src/ react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
  
+
+
+pylint 설명
+ https://thrillfighter.tistory.com/395

@@ -1,12 +1,14 @@
 
-from flask import Flask, request ,session , url_for ,escape ,redirect
+from flask import Flask, request ,session , url_for ,escape ,redirect ,jsonify
 from flaskext.mysql import MySQL
 from flask_cors import CORS
 import logging
 from login.loginManager import loginManager
+from configuration  import config
 import os
 import json
 from flask_jwt_extended import (JWTManager, jwt_required, create_access_token ,get_jwt_identity)
+import datetime
 
 # import socket
 # _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,11 +20,11 @@ app = Flask(__name__)
 CORS(app)
 mysql = MySQL()
 
-app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'akfldkelql123!'
-app.config['MYSQL_DATABASE_DB'] = 'report'
-app.config['MYSQL_DATABASE_HOST'] = '127.0.0.1'
-app.config['MYSQL_DATABASE_PORT'] = 3306
+app.config['MYSQL_DATABASE_HOST']     = config.DATABASE_CONFIG['MYSQL_DATABASE_HOST'] #'127.0.0.1'
+app.config['MYSQL_DATABASE_USER']     = config.DATABASE_CONFIG['MYSQL_DATABASE_USER'] #'root'
+app.config['MYSQL_DATABASE_PASSWORD'] = config.DATABASE_CONFIG['MYSQL_DATABASE_PASSWORD'] #'akfldkelql!'
+app.config['MYSQL_DATABASE_DB']       = config.DATABASE_CONFIG['MYSQL_DATABASE_DB']#'report'
+app.config['MYSQL_DATABASE_PORT']     = config.DATABASE_CONFIG['MYSQL_DATABASE_PORT'] #3306
 #app.config['SECRET_KEY'] = b'_5#y2L"F4Q8z\n\xec]/' #os.urandom(12)
 
 #app.secret_key = os.urandom(12)
@@ -30,6 +32,12 @@ mysql.init_app(app)
 
 app.config['JWT_SECRET_KEY'] = b'_5#y2L"F4Q8z\n\xec]/'
 jwt = JWTManager(app)
+
+
+logger = logging.getLogger("react_python")
+logger.setLevel(logging.INFO)
+
+
 
 def ExecuteQuery(sql,param):
   cur = mysql.connect().cursor()
@@ -45,7 +53,10 @@ def ExecuteQuery(sql,param):
 @app.route('/'  , methods=['POST'])
 @jwt_required
 def index(): 
-    app.logger.debug("::::::index::::::::")
+    logger.INFO("::::::index::::::::")
+    app.logger.debug('second test message...')
+    logging.warning('Watch out!') # will print a message to the console
+    logging.info('I told you so') # will not print anything
     current_user = get_jwt_identity()
     print(current_user)
     response = {'token' : '' ,
@@ -58,19 +69,19 @@ def index():
     return json.dumps(response)
 
 
-@app.route('/login' , methods=['POST']) 
+@app.route('/login' , methods=['POST'])
 def login():
       #app.secret_key = os.urandom(12)
       response = {}
       try :
-        app.logger.debug(':::::::userLogin::::::::')
+        print(':::::::userLogin::::::::')
         if request.method == 'POST':
               v_userId        = request.form.get('p_userId', None)
               v_password      = request.form.get('p_password', None)
 
               
-              app.logger.debug(v_userId)
-              app.logger.debug(v_password)
+              logger.debug(v_userId)
+              logger.debug(v_password)
               
               #LoginManager.loginCheck(v_userId ,v_password) 
               cux = mysql.connect()
@@ -92,26 +103,35 @@ def login():
               #    name    : '',
               #    levels  : 1
               # }
-              app.logger.debug("::retChk[0]::::"+ str(retChk[0]))
-              access_token = create_access_token(identity=v_userId)
+              print("::retChk[0]::::"+ str(retChk[0]))
+              
               if retChk[0] > 0 : 
+                    user = {
+                            'userId'  : v_userId,
+                            'name'    : retChk[1],
+                            'levels'  : retChk[2]              
+                    }
+                    #v_expires = datetime.datetime.now() + datetime.timedelta(days=0, seconds=30)
+                    #print(v_expires)
+                    v_expires = datetime.timedelta(seconds=10000)
+                    print(v_expires)
+                    #datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=60) 
+                    access_token = create_access_token(identity=user ,expires_delta=v_expires )  #expires_delta
                     response = {
-                      'access_token' : access_token,
-                      'user'         : {
-                                        'status'  :'S', 
-                                        'name'    : retChk[1],
-                                        'levels'  : retChk[2] ,
-                                        'message' : '로그인 성공.'
-                                       }              
+                          'access_token' : access_token ,
+                          'info'  : {
+                                      'status'  :'S', 
+                                      'message' : '로그인 성공.'
+                                    } 
                     }
               else :         
-                    response = {'access_token' : '' ,'user'  : { 'status' :'E' , 'message' : '등록된 아이디가 없습니다' }}                 
+                    response = {'access_token' : '' ,'info'  : { 'status' :'E' , 'message' : '등록된 아이디가 없습니다' }}                 
         else :
-              response = {'access_token' : '' ,'user'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}   
+              response = {'access_token' : '' ,'info'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}   
 
       except Exception as e:  
-            app.logger.debug("Exception_app_login" + str(e)) 
-            response = {'access_token' : '' ,'user'  : { 'status' :'E' , 'message' : str(e) }}   
+             logger.debug("Exception_app_login" + str(e)) 
+             response = {'access_token' : '' ,'info'  : { 'status' :'E' , 'message' : str(e) }}   
 
       return json.dumps(response)
 
@@ -127,42 +147,50 @@ def logout():
 @app.route('/weekly_report' ,methods=["GET" ,"POST"]) 
 @jwt_required
 def weeklyList():
-  try:
-    current_user = get_jwt_identity()
-    return json.dumps({"result"   : "Y"})
-
-  except Exception as e:  
-       app.logger.debug("Exception_app_login" + str(e)) 
-  
-  return 'Y'
-  # if request.method == 'POST':
-  #     #current_user = get_jwt_identity()
-  #     #app.logger.debug(current_user)
-  #     v_week         = request.form.get('p_week', None)
-  #     v_month        = request.form.get('p_month', None)
-  #     v_start_dt     = request.form.get('p_start_dt', None)
+      response ={}    
+      auth_header = request.headers.get('Authorization') 
+      print(auth_header)
+      try:
+        if request.method == 'POST':
+            current_user = get_jwt_identity()
+            print(current_user)
+            print(current_user['userId'])
 
 
 
-  #     print(":::::::::::::::")
-  #     print(v_month)
-  #     print(v_start_dt)
-      
-  #     v_query = "select id, gubun, document_num, title ,content ,complete ,type from weekly_report where user_id =%s and started=%s "
-  #     v_param = ("kim",v_start_dt)
-  #     list = ExecuteQuery(v_query,v_param)
-  #     v_result = json.dumps({
-  #       "result"   : "Y" ,
-  #       "LIST"     : list
-  #     })
-  #     return v_result
-  # else :
-  #     return "N"
+            v_week         = request.form.get('p_week', None)
+            v_month        = request.form.get('p_month', None)
+            v_start_dt     = request.form.get('p_start_dt', None)
+
+            print(":::::::::::::::")
+            print(v_month)
+            print(v_start_dt)
+            
+            v_query = "select id, gubun, document_num, title ,content ,complete ,type from weekly_report where user_id =%s and started=%s "
+            v_param = (current_user['userId'] ,v_start_dt)
+            list = ExecuteQuery(v_query,v_param)
+            response = { "result"   : "Y" , "LIST"     : list  , 'info'  : { 'status' :'S' , 'message' : '조회성공' }}
+        else :
+            response = {'result'    : 'N' ,'info'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}  
+    
+      except Exception as e: 
+             print("Exception_app_login" + str(e)) 
+             response = {'result' : 'N' ,'info'  : { 'status' :'E' , 'message' : str(e) }}  
+
+      return json.dumps(response)  
+
+
+
 
 @app.route('/weekly_report_insert' ,methods=["POST"])
+@jwt_required
 def insertWeeklyReport():
   if request.method == 'POST':
-      v_user_id       = "kim" #request.form.get('user_id', None)
+
+      current_user = get_jwt_identity()
+      print(current_user)
+
+      v_user_id       = current_user['userId'] #request.form.get('user_id', None)
       v_year          = request.form.get('p_year', None)
       v_month         = request.form.get('p_month', None)
       v_start_dt      = request.form.get('p_start_dt', None)
@@ -255,7 +283,6 @@ def updateWeeklyReport():
 
 if __name__ == '__main__':
   app.run(host="0.0.0.0", port="5000" ,debug=True)
-
   #SELECT FLOOR((DATE_FORMAT(now(),'%d')+(DATE_FORMAT(DATE_FORMAT(now(),'%Y%m%01'),'%w')-1))/7)+1 WEEK_OF_MONTH;
 
 
