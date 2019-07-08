@@ -86,3 +86,34 @@ export const cf_selectOptions = (optionsMap) => {
         return <option key={i.value} value={i.value}>{i.name}</option>
     })
 }
+
+
+export const cf_getSelectCode = (query) => {
+    let form = new FormData() 
+    form.append('p_type',       query.type?query.type:"")
+    form.append('p_menu',       query.menu?query.menu:"")
+    form.append('p_class',      query.class?query.class:"")
+    
+    return fetch(
+                query.url, {
+                    method  : "POST",
+                    body    : form
+                    //headers : reqHeader
+                }
+            ).then(response => {
+                console.log('::::::cf_getSelectCode::::')
+                console.log(response)
+                response.json().then(json => { 
+                    console.log(json)
+                    if(json.result ==='Y'){
+                        return json
+                    }else{
+                        alert(json.info.message)
+                        return null
+                    } 
+                }) 
+            }).catch(err =>  {
+                alert(err.message);
+                return err
+            });
+};

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 //import Config from 'react-native-config'
 import axios from 'axios';
 import List from '../component/common/List';
-import {cf_fetchPost} from '../component/common/CommonMethod';
+import {cf_fetchPost ,cf_getSelectCode} from '../component/common/CommonMethod';
 import ListPaging from '../component/common/ListPaging';
 //import Table from 'react-bootstrap/Table';
 import {Form ,Button  ,Table } from 'react-bootstrap';
@@ -52,6 +52,12 @@ class ReportHome extends Component{
     componentDidMount() {
         setTimeout(() => {
             this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
+            let query = {'type':'SELECT' ,'menu':'REPORT' ,'url':this.state.api_url + '/getSelectBox'}
+            const selectOptions =   cf_getSelectCode(query);
+            console.log(':::selectOptions:::')
+            console.log(selectOptions)
+
+
         }, 100)
     }
 
@@ -120,8 +126,8 @@ class ReportHome extends Component{
                         LIST        : json.LIST,
                         statusText  : 'OK',
                     }) 
-                )               
-            }).catch(err => alert(err));
+                ).catch(err => console.log(err));              
+            }).catch(err => console.log(err));
 
         } catch (e) {
             alert(e)
@@ -154,7 +160,7 @@ class ReportHome extends Component{
             f_content       : rowData.content,
             f_complete      : rowData.complete,
             f_type          : rowData.type,
-             FORM_ID        : form_id
+            FORM_ID         : form_id
         });
     }
 
@@ -216,7 +222,7 @@ class ReportHome extends Component{
                 }else{
                     result.json().then(json => alert(json.msg))
                 }
-            }).catch(err => alert(err))
+            }).catch(err => console.log(err))
 
             // axios.post(this.state.api_url + '/weekly_report_insert', form
             // ).then(response => { 

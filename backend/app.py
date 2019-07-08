@@ -113,7 +113,7 @@ def login():
                     }
                     #v_expires = datetime.datetime.now() + datetime.timedelta(days=0, seconds=30)
                     #print(v_expires)
-                    v_expires = datetime.timedelta(seconds=10000)
+                    v_expires = datetime.timedelta(seconds=int(config.SESSTION_TIME)) #seconds=10000
                     print(v_expires)
                     #datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=60) 
                     access_token = create_access_token(identity=user ,expires_delta=v_expires )  #expires_delta
@@ -279,6 +279,49 @@ def updateWeeklyReport():
         result   : "N" 
       })
       return v_result
+
+
+
+
+@app.route('/getSelectBox' ,methods=["GET" ,"POST"]) 
+def getSelectBoxList():
+      response ={}    
+      try:
+        if request.method == 'POST':
+
+
+            v_type        = request.form.get('p_type')
+            v_menu        = request.form.get('p_menu')
+            v_class       = request.form.get('p_class')            
+
+            print(':::['+v_type + ':::::' + v_menu + ':::::' + v_class + ']:::')
+
+            v_query   = "select * from cmn_code where "
+            v_query  +="type = %s"
+            v_param = (v_type,)
+
+            if v_menu != '' :
+              v_query +=" and menu=%s"
+              v_param = v_param + (v_menu,)
+
+            if v_class != '' :
+              v_query +=" and class=%s"
+              v_param = v_param + (v_class,)
+
+            v_query +=" order by class ,orders"
+          
+            print(':::::v_query:::::' + v_query)
+
+            list = ExecuteQuery(v_query ,v_param)
+            response = {'result'   : 'Y' , 'LIST'     : list  , 'info'  : { 'status' :'S' , 'message' : '조회성공' }}
+        else :
+            response = {'result'    : 'N' ,'info'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}  
+    
+      except Exception as e: 
+             print("Exception_app_login" + str(e)) 
+             response = {'result' : 'N' ,'info'  : { 'status' :'E' , 'message' : str(e) }}  
+
+      return json.dumps(response)  
 
 
 if __name__ == '__main__':

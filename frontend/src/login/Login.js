@@ -41,28 +41,25 @@ class Login extends Component {
   }
 
   onSubmit(history) {
-    console.log("history")
-    console.log(history)
     const { user } = this.state;
     const { login } = this.props.actions;
-    console.log(login)
     login(user, history);
   }
 
   render(){
     console.log(":::LOGIN:::::")
-    console.log(this.props)
     const { user: { userId, password } } = this.state;
-    const SubmitButton = withRouter(({ history }) => (
-      <Button
-        block
-        onClick={() => this.onSubmit(history)}
-        disabled={!this.validateForm()}
-        >
-        Login
-      </Button>
-    ));
-  
+    const { history } = this.props;
+    //라우트가 아닌 컴포넌트에서 라우터에서 사용하는 객체 - location, match, history 를 사용하려면 withRouter
+    // const SubmitButton = withRouter(({ history }) => (
+    //   <Button
+    //     block
+    //     onClick={() => this.onSubmit(history)}
+    //     disabled={!this.validateForm()}
+    //     >
+    //     Login
+    //   </Button>
+    // ));
 
     return (
       <div className="LoginForm">
@@ -76,14 +73,25 @@ class Login extends Component {
                 placeholder="아이디"
             />
             <FieldGroup 
-            id="password" 
-            type="password"
-            name="password"
-            value={password}
-            onChange={this.handleChange}
-            placeholder="Password" />
-
-            <SubmitButton />
+                id="password" 
+                type="password"
+                name="password"
+                value={password}
+                onChange={this.handleChange}
+                placeholder="Password" 
+                onKeyPress={event => {
+                  if (event.key === "Enter" && this.validateForm()) {
+                    this.onSubmit(history);
+                }}}
+            />
+            
+            <Button
+              block
+              onClick={() => this.onSubmit(history)}
+              disabled={!this.validateForm()}
+              >
+              Login
+            </Button>
 
         </Form>
       </div>
