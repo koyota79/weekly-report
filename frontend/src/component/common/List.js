@@ -8,7 +8,7 @@ const List = (props ) => {
     console.log(":::::::::LIST1::::::::::::::" ); 
     console.log(props);
     console.log(":::::::::LIST2::::::::::::::" ); 
-
+    let v_btnWeek = props.data.nowWeek
     return props.data.LIST.length > 0 ?(
       
             <Table striped bordered hover size="sm">
@@ -38,12 +38,24 @@ const List = (props ) => {
                                     )
                                 })
                             }
-                            <td>
-                                <div>
-                                    <Button variant="danger" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onRemove(item.id)}  > 
-                                        삭제
-                                    </Button>
-                                </div>
+                            <td> 
+                                {
+                                    (() => {
+                                        if (v_btnWeek === 0){ return (<div>
+                                            <Button variant="danger" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onRemove(item.id)}  > 
+                                                삭제
+                                            </Button>
+                                        </div>);
+                                        }else if (v_btnWeek < 0){ return (<div>
+                                            <Button variant="success" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onRemove(item.id)}  > 
+                                                복사
+                                            </Button>
+                                        </div>);
+                                        }else{
+                                            return (<div></div>);
+                                        }
+                                    })()
+                                }   
                             </td>
                         </tr>
                     ))

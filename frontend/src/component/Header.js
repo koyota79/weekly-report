@@ -1,10 +1,11 @@
 import React , { Component } from 'react';
-import {Nav ,Navbar ,Form ,Button ,FormControl} from 'react-bootstrap';
+import {Nav ,Navbar ,Form ,Button} from 'react-bootstrap';
 import LogoutButton from '../component/LogoutButton';
 import * as sessionActions  from '../action/SessionActions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as JWT from 'jwt-decode';
+//import {} from '../component/common/CommonMethod';
 
 //{Nav ,Navbar ,Form ,Button ,FormControl}
 //const Header = (props) => {
@@ -12,53 +13,60 @@ class Header extends Component{
     state = {
       userName  :''
     }
+
     componentDidMount() {
 
-          setTimeout(() => {
-            console.log('::::Header:::::')
-            console.log(this.props)
-            const {sessionInfo} = this.props
-            console.log(sessionInfo)
 
-            try{
-
-                  let level_class = ''
-                  var access_token = sessionInfo.access_token
-
-                  var jwtDecode    = JWT(access_token);
-                  console.log(":::decode1:::::"+jwtDecode)
-                  console.log(jwtDecode)
+    // var _promise = function () {
+    //     return new Promise(function (resolve, reject) {
+    //       setTimeout(function () {
+    //         resolve('Y')
+    //       }, 1000);
+    //     });
+    // };
+    // _promise().then(result => {
+    // })
     
-                  const {levels ,name ,userId} = jwtDecode.identity
-                  switch(levels) { 
-                    case 2: { 
-                      level_class = ' (파트장)';
-                      break; 
-                    } 
-                    case 3: { 
-                      level_class = ' (현장 관리자)';
-                      break; 
-                    }
-                    case 9: { 
-                      level_class = ' (슈퍼 관리자)';
-                      break;    
-                    } 
-                    default: { 
-                      level_class = ' (과장)';
-                      break;              
-                    } 
+        setTimeout(() => {
+          console.log('::::Header:::::')
+          const {sessionInfo} = this.props
+          try{
+
+                let level_class = ''
+                var access_token = sessionInfo.access_token
+
+                var jwtDecode    = JWT(access_token);
+                console.log(":::decode1:::::"+jwtDecode)
+                console.log(jwtDecode)
+
+                const {levels ,name ,userId} = jwtDecode.identity
+                switch(levels) { 
+                  case 2: { 
+                    level_class = ' (파트장)';
+                    break; 
+                  } 
+                  case 3: { 
+                    level_class = ' (현장 관리자)';
+                    break; 
                   }
-                  this.setState({
-                    userLevels  : levels,
-                    userName    : name + level_class,
-                    userId      : userId,
-                  })
-            }catch(e){
-              alert(e)
-            }
-     
-          }, 100)
-        
+                  case 9: { 
+                    level_class = ' (슈퍼 관리자)';
+                    break;    
+                  } 
+                  default: { 
+                    level_class = ' (과장)';
+                    break;              
+                  } 
+                }
+                this.setState({
+                  userLevels  : levels,
+                  userName    : name + level_class,
+                  userId      : userId,
+                })
+          }catch(e){
+            alert(e)
+          }
+        }, 800)         
     }
 
     render(){

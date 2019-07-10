@@ -5,7 +5,7 @@ import List from '../component/common/List';
 import {cf_fetchPost ,cf_getSelectCode} from '../component/common/CommonMethod';
 import ListPaging from '../component/common/ListPaging';
 //import Table from 'react-bootstrap/Table';
-import {Form ,Button  ,Table } from 'react-bootstrap';
+import { Button } from 'react-bootstrap'; //Form  ,Table 
 //import { Input } from 'reactstrap';
 import Moment  from 'moment';
 import '../App.css';
@@ -26,8 +26,8 @@ class ReportHome extends Component{
     constructor(props) {
         super(props)
         this.state =  {
-            HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"내용" ,"완료여부" ,"유형","삭제"], //헤더는 항상 첫번째에 위치
-            H_WIDTH         : ["60","70","200","250","0","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
+            HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"내용" ,"완료여부" ,"유형",""], //헤더는 항상 첫번째에 위치
+            H_WIDTH         : ["60","70","200","300","0","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
             id              : "",
             gubun           : "",
             document_num    : "",
@@ -37,7 +37,7 @@ class ReportHome extends Component{
             LIST            : [],
             date            : new Date(),
             currentPage     : Moment().weeks(),
-            start_dt        :  Moment().format('YYYY-MM-DD'),      
+            start_dt        : Moment().format('YYYY-MM-DD'),      
             end_dt          : "",
             EDITING         : false
         }
@@ -52,21 +52,50 @@ class ReportHome extends Component{
     componentDidMount() {
         setTimeout(() => {
             this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
-            let query = {'type':'SELECT' ,'menu':'REPORT' ,'url':this.state.api_url + '/getSelectBox'}
-            const selectOptions =   cf_getSelectCode(query);
-            console.log(':::selectOptions:::')
-            console.log(selectOptions)
+        }, 800)
+        let query = {'type':'SELECT' ,'menu':'REPORT' ,'url':this.state.api_url + '/getSelectBox'}
+        const selectOptions =   cf_getSelectCode(query);
+        this.handleSelectOptions(selectOptions)
+    }
 
+    handleSelectOptions(selectOptions){
+        try{
+            selectOptions.then(result => {
+                    result.json().then(json => { 
+                    //console.log(json)
+                    if(json.result ==='Y'){
+                        const v_optionsObj  = json.LIST
+                        const v_selectObj   = {COMPLETE :[] ,GUBUN :[] ,TYPE :[] ,WEEK :[]}
+                        for (let k = 0; k < v_optionsObj.length; k++) { 
+                            //console.log(v_optionsObj[k]); 
+                            let clss_nm = '';
+                                clss_nm = v_optionsObj[k].class
+                            let v_code  = v_optionsObj[k].code 
+                            let v_value = v_optionsObj[k].value 
+                            
+                            v_selectObj[clss_nm].push({'name' : v_code ,'value' : v_value })
 
-        }, 100)
+                        }                    
+                        //console.log(v_selectObj)
+                        this.setState({
+                            selectOptions : v_selectObj
+                        })
+                    }else{
+                        alert(json.info.message)
+                    } 
+                }) 
+            })
+        }catch(e){
+            console.log(e)
+        }
+
     }
 
     fncWeekDate = (currentWeek ,datePicker ,gubun) =>{
         console.log("::dates 달력 선택 일자::");
-        console.log(datePicker)
         //console.log(currentWeek);
         //console.log(Moment().week(25).format('YYYYMMDD'));
-    
+        
         let weeks = Moment(datePicker).week()
 
         if(gubun ==="BTN")//버튼클릭시
@@ -100,24 +129,33 @@ class ReportHome extends Component{
                 return Math.ceil(date.getDate() / 7);
             }
 
+
+            let v_weekState = 0
+            let v_currentWeeks = Moment().weeks() ;
+            if(weeks > v_currentWeeks ){//현재주차보다 많으면
+                v_weekState = v_weekState + 1
+            }else if(weeks < v_currentWeeks){
+                v_weekState = v_weekState - 1
+            }
+
+
+            //console.log(weeks + '::::v_weekState::::::'+v_weekState)
             let v_currWeek  = getWeekNo(v_startDate)
             this.setState({
                 start_dt    : v_startDate,
                 end_dt      : v_endDate,
                 currentPage : weeks,
-                currentWeek : v_currWeek
+                currentWeek : v_currWeek,
+                nowWeek     : v_weekState
             });
 
-            const {user} = this.props
-            console.log("::user.access_token::::::::"+user.access_token)
-            console.log("몇주인지 ::"+getWeekNo(v_startDate))
+            //console.log("몇주인지 ::"+getWeekNo(v_startDate))
             let form = new FormData() 
             form.append('p_year',        Moment(v_startDate).format('YYYY'))
             form.append('p_month',       Moment(v_startDate).format('MM'))
             form.append('p_week',        v_currWeek)
             form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
             form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
-            form.append('access_token',  user.access_token) 
             form.append('url',           this.state.api_url + '/weekly_report') 
             
             cf_fetchPost(form ,this.props).then(result => {
@@ -150,7 +188,7 @@ class ReportHome extends Component{
 
     handlerSelectRow = (rowData) =>{
         let form_id = Object.getOwnPropertyNames( rowData );
-        console.log(this.textInput)
+        //console.log(this.textInput)
         this.setState({
             EDITING         : true,
             id              : rowData.id, 
@@ -176,7 +214,6 @@ class ReportHome extends Component{
                 return
             }
 
-            const {user} = this.props
             let form = new FormData() 
             form.append('p_gubun',        f_gubun) 
             form.append('p_title',        f_title) 
@@ -191,10 +228,9 @@ class ReportHome extends Component{
             form.append('p_start_dt',    start_dt.replace(/-/gi,""))  
             form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
             form.append('url',           this.state.api_url + '/weekly_report_insert')
-            form.append('access_token',  user.access_token) 
 
-            cf_fetchPost(form).then(result => {
-                console.log(result)
+            cf_fetchPost(form ,this.props).then(result => {
+                //console.log(result)
                 if(result.ok){
                     result.json().then(json => 
                         this.setState({
@@ -223,54 +259,21 @@ class ReportHome extends Component{
                     result.json().then(json => alert(json.msg))
                 }
             }).catch(err => console.log(err))
-
-            // axios.post(this.state.api_url + '/weekly_report_insert', form
-            // ).then(response => { 
-            //     console.log("::::response::::");
-            //     console.log(response);
-            //     if(response.data.result ==='Y'){
-            //         const v_insertId = response.data.insertId
-            //         this.setState({
-            //             id                : "",
-            //             f_gubun           : "",
-            //             f_document_num    : "",
-            //             f_title           : "",
-            //             f_content         : "",
-            //             f_complete        : "",
-            //             f_type            : "",
-            //             statusText        : response.statusText,
-            //             EDITING           : false,
-
-            //             LIST : LIST.concat({
-            //                 id              : v_insertId,
-            //                 gubun           : f_gubun,
-            //                 document_num    : f_document_num,
-            //                 title           : f_title,
-            //                 content         : f_content,
-            //                 complete        : f_complete,
-            //                 type            : f_type 
-            //             })
-            //         })
-            //     }else{
-            //         alert('등록 실패')
-            //     }
-            // });
         } catch (e) {
             alert(e);
         }      
     }
 
-    handleToggleEdit = (e) => {
+    handleToggleEdit = () => {
         const { EDITING  } = this.state;
         this.setState({ EDITING: !EDITING });
     }
 
-    handleChange = (e ) => {
+    handleChange = (e) => {
         this.setState({
             [e.target.id] : e.target.value
         });
     }
-
 
     handleRemove = (id) => { 
         try{
@@ -399,36 +402,16 @@ class ReportHome extends Component{
 
     render(){
         const {EDITING} = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,
-        const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
+        //const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
         console.log("::REPORT::")
 
-        options.gubun.push(
-            {name:'업무구분' ,value:''},
-            {name:'CRESYS'  ,value:'CRESYS'},
-            {name:'LMS'     ,value:'LMS'},
-            {name:'MIS'     ,value:'MIS'}
-        )
+        // options.gubun.push(
+        //     {name:'업무구분' ,value:''},
+        //     {name:'CRESYS'  ,value:'CRESYS'},
+        //     {name:'LMS'     ,value:'LMS'},
+        //     {name:'MIS'     ,value:'MIS'}
+        // )
 
-        options.complete.push(
-            {name:'완료여부' ,value:''},
-            {name:'진행중'   ,value:'진행중'},
-            {name:'완료'     ,value:'완료'}
-        )
-
-        options.type.push(
-            {name:'유형'     ,value:''},
-            {name:'유지보수' ,value:'유지보수'},
-            {name:'개선'     ,value:'개선'},
-            {name:'개발'     ,value:'개발'}
-        )
-
-        options.week.push(
-            {name:'1주차'     ,value:'1'},
-            {name:'2주차'     ,value:'2'},
-            {name:'3주차'     ,value:'3'},
-            {name:'4주차'     ,value:'4'},
-            {name:'5주차'     ,value:'5'}
-        )
         return ( 
             <div style={{ width: '100%'}}>
                 <div style={{ marginBottom: '15px' ,marginTop: '20px'}}>
@@ -443,73 +426,19 @@ class ReportHome extends Component{
                             </Button>
                         )
                     }
-                    {/* <LinkedCalendar onDatesChange={this.onDatesChange} showDropdowns={false} /> */}
                     <Button variant="secondary" className="float-right" style={{ marginRight: '5px'}}  onClick={this.handleReset}  > 
                         취소
                     </Button>
-                    {/* <Calendar onChange={this.onDatesChange} value={this.state.date}  /> */}
                     <div style={{marginLeft : "20px" ,marginTop : "5px" ,float : "left"}}>
-                        {/* <DatePicker  onChange={this.onDatesChange}  value={this.state.date} dateFormat="MM-yyyy" showMonthYearPicker/> */}
-                        <DatePicker 
-                                selected={this.state.date}
-                                onChange={this.onDateChange}
-                                filterDate={this.isWeekday}
-                                dateFormat="yyyy/MM/dd"
-                                locale="kr"
-                            />
-    
+                        <DatePicker selected={this.state.date} onChange={this.onDateChange} filterDate={this.isWeekday} dateFormat="yyyy/MM/dd"
+                                locale="kr" />
                     </div>
 
                     <div style={{ width: '300px'  ,marginLeft : "300px"  ,float : "left"}} >
                         <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
                 </div>
-                    <ReportForm onChange={this.handleChange} props={this.state} options ={options}  ref={this.textInput} />
-                    {/* <Form > 
-                        <Table striped bordered hover size="sm"  >
-                            <tbody>
-                                <tr>
-                                    <td style={{ width: '120px' ,textAlign : "center"}}>
-                                        <Form.Group controlId='f_gubun'> 
-                                            <Form.Control as="select" className="fontSize_13"  onChange={this.handleChange} value={f_gubun ||''} >
-                                                {renderOptions(options.gubun)}
-                                            </Form.Control> 
-                                        </Form.Group>                            
-                                    </td>
-                                    <td style={{ width: '200px' ,textAlign : "center"}}>    
-                                        <Form.Group controlId="f_document_num">
-                                            <Form.Control placeholder="문서번호" className="fontSize_13" onChange={this.handleChange}  value={f_document_num ||''} />
-                                        </Form.Group>
-                                    </td>
-                                    <td style={{ width: '300px' ,textAlign : "center"}}>
-                                        <Form.Group controlId="f_title">
-                                            <Form.Control placeholder="요청사항" ref={(input) => { this.inputform = input; }}   className="fontSize_13" onChange={this.handleChange}  value={f_title ||''} />
-                                        </Form.Group>
-                                    </td>
-                                    <td style={{ width: '0px' ,textAlign : "center"}}>
-                                        <Form.Group>
-                                            <Input type="textarea" name="f_content" id="f_content"   placeholder="처리내용" className="fontSize_13" onChange={this.handleChange}  value={f_content ||''} />
-                                        </Form.Group>
-                                    </td>
-                                    <td style={{ width: '120px' ,textAlign : "center"}}>
-                                        <Form.Group controlId="f_complete">
-                                            <Form.Control as="select" placeholder="완료여부" className="fontSize_13" onChange={this.handleChange}  value={f_complete ||''} >
-                                                {renderOptions(options.complete)}
-                                            </Form.Control>
-                                        </Form.Group>
-                                    </td>
-                                    <td style={{ width: '80px' ,textAlign : "center"}}>
-                                        <Form.Group controlId="f_type">
-                                            <Form.Control as="select" placeholder="유형" className="fontSize_13 width_75" onChange={this.handleChange}  value={f_type ||''} >
-                                                {renderOptions(options.type)}
-                                            </Form.Control>                                    
-                                        </Form.Group>
-                                    </td>                            
-                                </tr>
-                            </tbody>
-                        </Table>
-                    </Form >  */}
-
+                <ReportForm onChange={this.handleChange} props={this.state} ref={this.textInput} />
                 { this.state.statusText==="OK" ? (
                     <List data={this.state} onRemove={this.handleRemove} onDoubleClick={this.handlerSelectRow} />
                     ):(

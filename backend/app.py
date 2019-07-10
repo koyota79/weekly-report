@@ -206,7 +206,7 @@ def insertWeeklyReport():
       cursor  = con.cursor()
       query   = "INSERT INTO weekly_report (user_id ,started ,year ,month ,week ,gubun, document_num, title ,content ,complete ,type)"
       query   +="VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-      values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num , v_content ,v_title ,v_complete ,v_type)
+      values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num  ,v_title ,v_content ,v_complete ,v_type)
       cursor.execute(query, values)
       v_insertId = con.insert_id()
       con.commit()
@@ -249,10 +249,6 @@ def deleteWeeklyReport():
 @app.route('/weekly_report_update' ,methods=["POST"])
 def updateWeeklyReport():
   if request.method == 'POST':
-      v_user_id       = "kim" #request.form.get('user_id', None)
-      v_year          = "2019" #request.form.get('year', None)
-      v_month         = "06" #request.form.get('month', None)
-      v_week          = "4" #request.form.get('week', None)
       v_id            = request.form.get('id', None)
       v_gubun         = request.form.get('p_gubun', None)
       v_document_num  = request.form.get('p_document_num', None)
@@ -322,6 +318,45 @@ def getSelectBoxList():
              response = {'result' : 'N' ,'info'  : { 'status' :'E' , 'message' : str(e) }}  
 
       return json.dumps(response)  
+
+
+
+
+
+@app.route('/weekly_report_copy' ,methods=["POST"])
+def copyWeeklyReport():
+  try:    
+    if  request.method == 'POST':
+
+         v_index_id      = request.form.get('p_index_id', None)
+         v_year          = request.form.get('p_year', None)
+         v_month         = request.form.get('p_month', None)
+         v_start_dt      = request.form.get('p_start_dt', None)
+         v_week          = request.form.get('p_week', None)
+    
+         con     = mysql.connect()
+         cursor  = con.cursor()
+
+         query   = "insert into weekly_report (user_id ,started ,year ,month ,week,gubun ,document_num ,title,content,complete ,type)"
+         query   +="select user_id ,started ,year ,month ,week,gubun ,document_num ,title,content,complete ,type"
+         query   +="from weekly_report where id = %s"
+
+
+         values  = (v_index_id ,v_start_dt ,v_year ,v_month ,v_week)
+         cursor.execute(query, values)
+         con.commit()
+         con.close()
+        
+         response = {'result'   : 'Y' , 'info'  : { 'status' :'S' , 'message' : '복사성공' }}
+    else :
+         response = {'result'    : 'N' ,'info'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}  
+  
+  except Exception as e: 
+         print("weekly_report_copy" + str(e)) 
+         response = {'result' : 'N' ,'info'  : { 'status' :'E' , 'message' : str(e) }}  
+
+  return json.dumps(response)  
+
 
 
 if __name__ == '__main__':

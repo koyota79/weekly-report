@@ -2,9 +2,9 @@ import React from 'react';
 import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
 const ListPaging = (props ) => {
-    console.log("PAGING")
+    //console.log("PAGING")
     const {currentPage} = props.data
-    console.log("::::currentPage::::::"+currentPage);
+    //console.log("::::currentPage::::::"+currentPage);
     return  <Pagination aria-label="Page navigation example"> 
                 {/* <PaginationItem disabled={currentPage <= 0}> */}
                 <PaginationItem>
