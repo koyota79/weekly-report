@@ -109,7 +109,9 @@ def login():
                     user = {
                             'userId'  : v_userId,
                             'name'    : retChk[1],
-                            'levels'  : retChk[2]              
+                            'levels'  : retChk[2],
+                            'part'    : retChk[3],
+                            'commute' : retChk[4]              
                     }
                     #v_expires = datetime.datetime.now() + datetime.timedelta(days=0, seconds=30)
                     #print(v_expires)
@@ -120,8 +122,9 @@ def login():
                     response = {
                           'access_token' : access_token ,
                           'info'  : {
-                                      'status'  :'S', 
-                                      'message' : '로그인 성공.'
+                                      'status'  : 'S', 
+                                      'message' : '로그인 성공.',
+                                      'part'    : retChk[3]
                                     } 
                     }
               else :         
@@ -166,7 +169,8 @@ def weeklyList():
             print(v_month)
             print(v_start_dt)
             
-            v_query = "select id, gubun, document_num, title ,content ,complete ,type from weekly_report where user_id =%s and started=%s "
+            v_query  = "select id, gubun, document_num, title ,content ,complete ,type ,old_id from weekly_report where user_id =%s and started=%s "
+            v_query += " order by id "
             v_param = (current_user['userId'] ,v_start_dt)
             list = ExecuteQuery(v_query,v_param)
             response = { "result"   : "Y" , "LIST"     : list  , 'info'  : { 'status' :'S' , 'message' : '조회성공' }}
@@ -288,13 +292,18 @@ def getSelectBoxList():
 
             v_type        = request.form.get('p_type')
             v_menu        = request.form.get('p_menu')
-            v_class       = request.form.get('p_class')            
+            v_class       = request.form.get('p_class') 
+            v_part        = request.form.get('p_part')             
 
-            print(':::['+v_type + ':::::' + v_menu + ':::::' + v_class + ']:::')
+            print(':::['+v_type + ':::::' + v_menu + ':::::' + v_class + '::::' + v_part + ']:::')
 
             v_query   = "select * from cmn_code where "
-            v_query  +="type = %s"
-            v_param = (v_type,)
+            v_query  +="type =%s "
+            v_param = (v_type, )
+
+            if v_part != '' :
+              v_query +="and part in (%s , 'ALL')"
+              v_param = v_param + (v_part,)
 
             if v_menu != '' :
               v_query +=" and menu=%s"
@@ -324,36 +333,38 @@ def getSelectBoxList():
 
 
 @app.route('/weekly_report_copy' ,methods=["POST"])
-def copyWeeklyReport():
+def WeeklyReportCopy():
   try:    
     if  request.method == 'POST':
 
-         v_index_id      = request.form.get('p_index_id', None)
+         v_firt_start_dt = request.form.get('p_first_start_dt', None)
          v_year          = request.form.get('p_year', None)
          v_month         = request.form.get('p_month', None)
-         v_start_dt      = request.form.get('p_start_dt', None)
          v_week          = request.form.get('p_week', None)
+         v_index_id      = request.form.get('p_id', None)
+         print('::::v_index_id:::::'+v_index_id)
     
          con     = mysql.connect()
          cursor  = con.cursor()
 
-         query   = "insert into weekly_report (user_id ,started ,year ,month ,week,gubun ,document_num ,title,content,complete ,type)"
-         query   +="select user_id ,started ,year ,month ,week,gubun ,document_num ,title,content,complete ,type"
-         query   +="from weekly_report where id = %s"
+         query   = "insert into weekly_report (user_id ,started ,year ,month ,week,gubun "
+         query   +=",document_num ,title ,content,complete ,type ,old_id) "
+         query   +="select user_id ,%s ,%s ,%s ,%s ,gubun ,document_num ,title ,content ,complete ,type ,%s "
+         query   +="from weekly_report where id =%s "
 
 
-         values  = (v_index_id ,v_start_dt ,v_year ,v_month ,v_week)
+         values  = (v_firt_start_dt ,v_year ,v_month ,v_week ,int(v_index_id) ,int(v_index_id))
          cursor.execute(query, values)
          con.commit()
          con.close()
         
-         response = {'result'   : 'Y' , 'info'  : { 'status' :'S' , 'message' : '복사성공' }}
+         response = {'result'  : 'Y' ,'message' : '복사성공' }
     else :
-         response = {'result'    : 'N' ,'info'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}  
+         response = {'result'  : 'N' ,'message' : '잘못된 접근경로'}  
   
   except Exception as e: 
          print("weekly_report_copy" + str(e)) 
-         response = {'result' : 'N' ,'info'  : { 'status' :'E' , 'message' : str(e) }}  
+         response = {'result' : 'N' , 'message' : str(e) }  
 
   return json.dumps(response)  
 

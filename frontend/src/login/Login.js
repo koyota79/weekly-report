@@ -4,7 +4,7 @@ import { Button,  FormGroup, FormControl ,FormLabel ,Form } from "react-bootstra
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as sessionActions from '../action/SessionActions';
-import { withRouter } from 'react-router-dom';
+//import { withRouter } from 'react-router-dom';
 
 function FieldGroup({ id, label, help, ...props }) {
   return (

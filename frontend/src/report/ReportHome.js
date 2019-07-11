@@ -33,12 +33,21 @@ class ReportHome extends Component{
             document_num    : "",
             title           : "",
             content         : "",
+            old_id          : "",
             api_url         : process.env.REACT_APP_API_URL,
             LIST            : [],
             date            : new Date(),
             currentPage     : Moment().weeks(),
             start_dt        : Moment().format('YYYY-MM-DD'),      
             end_dt          : "",
+
+            //복사할때 필요한 현재 셋팅값
+            first_start_dt  : "",
+            first_start_dt  : "", 
+            first_year      : "", 
+            first_month     : "",
+            first_week      : "",
+            
             EDITING         : false
         }
     }
@@ -52,13 +61,15 @@ class ReportHome extends Component{
     componentDidMount() {
         setTimeout(() => {
             this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
-        }, 800)
-        let query = {'type':'SELECT' ,'menu':'REPORT' ,'url':this.state.api_url + '/getSelectBox'}
-        const selectOptions =   cf_getSelectCode(query);
-        this.handleSelectOptions(selectOptions)
+            this.handleSelectOptions()
+        }, 500)
     }
 
-    handleSelectOptions(selectOptions){
+    handleSelectOptions(){
+        const {info} = this.props.user //info.part
+        let query = {'type':'SELECT' ,'menu':'REPORT','url':this.state.api_url + '/getSelectBox'}
+        const selectOptions = cf_getSelectCode(query);
+
         try{
             selectOptions.then(result => {
                     result.json().then(json => { 
@@ -68,13 +79,18 @@ class ReportHome extends Component{
                         const v_selectObj   = {COMPLETE :[] ,GUBUN :[] ,TYPE :[] ,WEEK :[]}
                         for (let k = 0; k < v_optionsObj.length; k++) { 
                             //console.log(v_optionsObj[k]); 
-                            let clss_nm = '';
-                                clss_nm = v_optionsObj[k].class
-                            let v_code  = v_optionsObj[k].code 
-                            let v_value = v_optionsObj[k].value 
-                            
-                            v_selectObj[clss_nm].push({'name' : v_code ,'value' : v_value })
+                            let class_nm = '';
+                                class_nm = v_optionsObj[k].class
+                            let v_name   = v_optionsObj[k].name 
+                            let v_value  = v_optionsObj[k].value 
+                            let v_part   = v_optionsObj[k].part 
 
+                            if(class_nm ==='GUBUN'){  //업부구분                              
+                                    if(v_part === info.part || v_part === 'ALL' ) //해당하는 파트 리스트만
+                                        v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value })
+                            }else{
+                                v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value })
+                            } 
                         }                    
                         //console.log(v_selectObj)
                         this.setState({
@@ -129,9 +145,8 @@ class ReportHome extends Component{
                 return Math.ceil(date.getDate() / 7);
             }
 
-
             let v_weekState = 0
-            let v_currentWeeks = Moment().weeks() ;
+            let v_currentWeeks = Moment().weeks()
             if(weeks > v_currentWeeks ){//현재주차보다 많으면
                 v_weekState = v_weekState + 1
             }else if(weeks < v_currentWeeks){
@@ -141,18 +156,27 @@ class ReportHome extends Component{
 
             //console.log(weeks + '::::v_weekState::::::'+v_weekState)
             let v_currWeek  = getWeekNo(v_startDate)
+            let v_year      = Moment(v_startDate).format('YYYY')
+            let v_month     = Moment(v_startDate).format('MM')
+
+            const { first_start_dt ,first_year ,first_month ,first_week } = this.state;
             this.setState({
-                start_dt    : v_startDate,
-                end_dt      : v_endDate,
-                currentPage : weeks,
-                currentWeek : v_currWeek,
-                nowWeek     : v_weekState
+                start_dt        : v_startDate,
+                end_dt          : v_endDate,
+                currentPage     : weeks,
+                currentWeek     : v_currWeek,
+                nowWeek         : v_weekState,
+
+                first_start_dt  : first_start_dt?first_start_dt:v_startDate,
+                first_year      : first_year?first_year:v_year,
+                first_month     : first_month?first_month:v_month,
+                first_week      : first_week?first_week:weeks
             });
 
-            //console.log("몇주인지 ::"+getWeekNo(v_startDate))
+            console.log("첫시작날짜  ::"+v_startDate)
             let form = new FormData() 
-            form.append('p_year',        Moment(v_startDate).format('YYYY'))
-            form.append('p_month',       Moment(v_startDate).format('MM'))
+            form.append('p_year',        v_year)
+            form.append('p_month',       v_month)
             form.append('p_week',        v_currWeek)
             form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
             form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
@@ -400,6 +424,34 @@ class ReportHome extends Component{
         this.fncWeekDate(index ,this.state.select_dt , "BTN")
     }
 
+    //버튼클릭시
+    handlerReportCopy = (index) =>{
+        try {
+            const {first_start_dt ,first_year ,first_month ,first_week ,api_url } = this.state
+
+            let form = new FormData() 
+            form.append('p_id',             index)
+            form.append('p_year',           first_year)
+            form.append('p_month',          first_month)
+            form.append('p_first_start_dt', first_start_dt.replace(/-/gi,"")) 
+            form.append('p_week',           first_week)   
+            form.append('url',              api_url + '/weekly_report_copy')
+
+            cf_fetchPost(form ,this.props).then(result => {
+                if(result.ok){
+                    result.json().then(json => 
+                        alert(json.message)
+                    )
+                }else{
+                    result.json().then(json => alert(json.msg))
+                }
+            }).catch(err => console.log(err))
+        } catch (e) {
+            alert(e);
+        }    
+        
+    }
+
     render(){
         const {EDITING} = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,
         //const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
@@ -440,7 +492,7 @@ class ReportHome extends Component{
                 </div>
                 <ReportForm onChange={this.handleChange} props={this.state} ref={this.textInput} />
                 { this.state.statusText==="OK" ? (
-                    <List data={this.state} onRemove={this.handleRemove} onDoubleClick={this.handlerSelectRow} />
+                    <List data={this.state} onRemove={this.handleRemove} onReportCopy={this.handlerReportCopy} onDoubleClick={this.handlerSelectRow} />
                     ):(
                         <span>LOADING....</span>
                     )

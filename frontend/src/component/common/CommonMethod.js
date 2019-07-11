@@ -93,7 +93,8 @@ export const cf_getSelectCode = (query) => {
     form.append('p_type',       query.type?query.type:"")
     form.append('p_menu',       query.menu?query.menu:"")
     form.append('p_class',      query.class?query.class:"")
-    
+    form.append('p_part',       query.part?query.part:"")
+
     return fetch(
                 query.url, {
                     method  : "POST",

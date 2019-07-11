@@ -47,7 +47,7 @@ const List = (props ) => {
                                             </Button>
                                         </div>);
                                         }else if (v_btnWeek < 0){ return (<div>
-                                            <Button variant="success" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onRemove(item.id)}  > 
+                                            <Button variant="success" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onReportCopy(item.id)}  > 
                                                 복사
                                             </Button>
                                         </div>);
