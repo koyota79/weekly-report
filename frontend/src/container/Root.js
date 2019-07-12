@@ -7,6 +7,7 @@ import PrivateRoute from './PrivateRoute';
 import '../App.css';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import ReportManager from '../report/ReportManager';
 import Report from '../report/ReportHome';
 import Login from '../login/Login';  
 import Main from './Main';
@@ -23,8 +24,9 @@ const Root = ({ authenticated, checked }) => (
             {authenticated?<Header/>:""}
             <Switch>
                 <PrivateRoute exact path="/" component={Main} authenticated={authenticated}/>
+                <PrivateRoute path="/report" component={Report} authenticated={authenticated}/>
+                <PrivateRoute path="/report_manager" component={ReportManager} authenticated={authenticated}/>
                 <Route path="/login" component={Login}/>
-                <Route path="/report" component={Report} authenticated={authenticated}/>
             </Switch>
         </div>
         }

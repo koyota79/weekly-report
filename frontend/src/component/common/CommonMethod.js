@@ -1,4 +1,5 @@
 import React from 'react';
+import * as JWT from 'jwt-decode';
 // const reqHeader = new Headers({
 //     //"Content-Type": "multipart/form-data",
 //     'Authorization': 'Bearer '+ user.access_token,
@@ -35,12 +36,13 @@ import React from 'react';
 //     })    
 // )
 
-export const cf_fetchPost = (form ,props) => {
-    const {user} = props
-    const v_access_token = user.access_token
+export const cf_fetchPost = (form ,session) => {
+    const {access_token ,props} = session
+    console.log('::cf_fetchPost::props')
+    console.log(props)
     const v_url          = form.get('url')
-    if(v_access_token !== undefined && v_access_token !== null){
-        const reqHeader = new Headers({'Authorization': 'Bearer '+ v_access_token,});
+    if(access_token !== undefined && access_token !== null){
+        const reqHeader = new Headers({'Authorization': 'Bearer '+ access_token,});
         return fetch(
                     v_url, {
                         method  : "POST",
@@ -50,7 +52,6 @@ export const cf_fetchPost = (form ,props) => {
                 ).then(response => {
                     console.log('::::::cnfetch::::')
                     console.log(response)
-                    console.log(props)
                     //return response
                     if (response.ok) {
                         return response
@@ -59,6 +60,7 @@ export const cf_fetchPost = (form ,props) => {
                             response.json().then(json => {
                                 props.actions.logout(props.history)
                                 alert(json.msg)
+                               
                             })
                         }else{
                             response.json().then(json => console.log(json.msg))
@@ -72,7 +74,8 @@ export const cf_fetchPost = (form ,props) => {
         
     }else{
         //console.log('token required')
-        throw new Error("token required")
+        props.actions.logout(props.history)
+        throw new Error("token 만료")
     }
 }
 
@@ -110,3 +113,10 @@ export const cf_getSelectCode = (query) => {
                 return err
             });
 };
+
+export const cf_getDecodeToken = (access_token) => {
+    var jwtDecode    = JWT(access_token);
+    console.log(":::cf_getDecodeToken decode:::::")
+    console.log(jwtDecode)
+    return jwtDecode.identity
+}

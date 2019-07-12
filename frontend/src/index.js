@@ -14,8 +14,9 @@ const reducer = combineReducers({
 
 const store = createStore(reducer, undefined, compose(applyMiddleware(thunkMiddleware)));
 
+const options = { refreshOnCheckAuth: false, redirectPath: '/login' };// , driver: 'COOKIES'
 // Init the session service
-sessionService.initSessionService(store);
+sessionService.initSessionService(store ,options);
 
 ReactDOM.render(
   <Provider store={store}>

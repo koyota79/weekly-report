@@ -11,7 +11,7 @@ export const login = (user, history) => {
         alert(info.message)
         return
       }
-      
+
       sessionService.saveSession({ access_token }).then(() => {        
         console.log(":::::saveSession::")
         console.log(response.data)

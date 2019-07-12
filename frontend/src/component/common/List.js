@@ -27,10 +27,10 @@ const List = (props ) => {
                 {
                     props.data.LIST.map((item,i) => (
                         <tr key={i} className={(props.data.EDITING && props.data.id===item.id)?"upd-corlor":""}> 
-                            <td>{i+1}</td>
+                            {props.data.numbering?<td>{i+1}</td>:null}
                             {
                                 Object.getOwnPropertyNames( props.data.LIST[0]).map((keyObj ,n) => {
-                                    return (!keyObj.includes("id")?(
+                                    return ( (!keyObj.includes("id") && !keyObj.includes("__H"))?(
                                                 <td key={n} onDoubleClick={() => props.onDoubleClick(item) } className="fontSize_13" > 
                                                     {item[keyObj]}
                                                 </td>
@@ -38,25 +38,27 @@ const List = (props ) => {
                                     )
                                 })
                             }
-                            <td> 
-                                {
-                                    (() => {
-                                        if (v_btnWeek === 0){ return (<div>
-                                            <Button variant="danger" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onRemove(item.id)}  > 
-                                                삭제
-                                            </Button>
-                                        </div>);
-                                        }else if (v_btnWeek < 0){ return (<div>
-                                            <Button variant="success" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onReportCopy(item.id)}  > 
-                                                복사
-                                            </Button>
-                                        </div>);
-                                        }else{
-                                            return (<div></div>);
-                                        }
-                                    })()
-                                }   
-                            </td>
+                            {props.data.btn_use?
+                                <td> 
+                                    {
+                                        (() => {
+                                            if (v_btnWeek === 0){ return (<div>
+                                                <Button variant="danger" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onRemove(item.id)}  > 
+                                                    삭제
+                                                </Button>
+                                            </div>);
+                                            }else if (v_btnWeek < 0){ return (<div>
+                                                <Button variant="success" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onReportCopy(item.id)}  > 
+                                                    복사
+                                                </Button>
+                                            </div>);
+                                            }else{
+                                                return (<div></div>);
+                                            }
+                                        })()
+                                    }   
+                                </td>
+                            :null}
                         </tr>
                     ))
                 }

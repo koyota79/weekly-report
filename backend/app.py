@@ -369,6 +369,50 @@ def WeeklyReportCopy():
   return json.dumps(response)  
 
 
+@app.route('/report_manager' ,methods=["GET" ,"POST"]) 
+@jwt_required
+def reportManagerList():
+    response ={}    
+    auth_header = request.headers.get('Authorization') 
+    print(auth_header)
+    try:
+      if request.method == 'POST':
+          current_user = get_jwt_identity()
+          print(current_user)
+          print(current_user['userId'])
+
+
+
+          v_week         = request.form.get('p_week', None)
+          v_month        = request.form.get('p_month', None)
+          v_start_dt     = request.form.get('p_start_dt', None)
+
+          print(":::::::::::::::")
+          print(v_month)
+          print(v_start_dt)
+          
+          v_query  = "select a.name ,b.gubun as gubun_mng ,b.gubun ,b.document_num ,b.title "
+          v_query += ",b.content ,b.complete ,b.user_id ,b.type ,b.started as started__H  "
+          v_query += ",a.commute   ,a.part as part__H ,a.levels as levels__H "
+          v_query += "from member a "
+          v_query += "inner join weekly_report b "
+          v_query += "on a.user_id = b.user_id "
+          v_query += "where started =%s "
+          v_query += "order by levels desc ,gubun ,user_id ,started desc "
+
+
+          v_param = (v_start_dt)
+          list = ExecuteQuery(v_query,v_param)
+          response = { "result"   : "Y" , "LIST"     : list  , 'info'  : { 'status' :'S' , 'message' : '조회성공' }}
+      else :
+          response = {'result'    : 'N' ,'info'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}  
+  
+    except Exception as e: 
+            print("Exception_app_login" + str(e)) 
+            response = {'result' : 'N' ,'info'  : { 'status' :'E' , 'message' : str(e) }}  
+
+    return json.dumps(response)  
+
 
 if __name__ == '__main__':
   app.run(host="0.0.0.0", port="5000" ,debug=True)

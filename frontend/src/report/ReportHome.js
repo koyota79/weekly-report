@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 //import Config from 'react-native-config'
 import axios from 'axios';
 import List from '../component/common/List';
-import {cf_fetchPost ,cf_getSelectCode} from '../component/common/CommonMethod';
+import {cf_fetchPost ,cf_getSelectCode ,cf_getDecodeToken} from '../component/common/CommonMethod';
 import ListPaging from '../component/common/ListPaging';
 //import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap'; //Form  ,Table 
@@ -12,12 +12,12 @@ import '../App.css';
 import DatePicker ,{registerLocale} from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import getDay from "date-fns/getDay";
+import { sessionService } from 'redux-react-session';
 
 import ReportForm from './ReportForm';
 import * as sessionActions  from '../action/SessionActions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-//import * as JWT from 'jwt-decode';
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 //npm start .env.development REACT_APP_API_URL=26.2.111.149:5000
@@ -28,6 +28,8 @@ class ReportHome extends Component{
         this.state =  {
             HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"내용" ,"완료여부" ,"유형",""], //헤더는 항상 첫번째에 위치
             H_WIDTH         : ["60","70","200","300","0","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
+            numbering       : true,
+            btn_use         : true,
             id              : "",
             gubun           : "",
             document_num    : "",
@@ -43,7 +45,6 @@ class ReportHome extends Component{
 
             //복사할때 필요한 현재 셋팅값
             first_start_dt  : "",
-            first_start_dt  : "", 
             first_year      : "", 
             first_month     : "",
             first_week      : "",
@@ -52,6 +53,38 @@ class ReportHome extends Component{
         }
     }
 
+    componentWillMount() {
+        const userSession = sessionService.loadUser();
+                userSession.then(response => { 
+                    console.log(':::::componentWillMount MAIN::::::')
+                    const access_token = response.access_token
+                    const {levels ,name ,part} = cf_getDecodeToken(access_token)
+                    const {currentPage , start_dt} = this.state
+
+                    let wkDateObj = {
+                        'currentWeek'  : currentPage ,
+                        'datePicker'   : start_dt ,
+                        'gubun'        : 'CAL' ,
+                        'session'      : {
+                            'access_token' : access_token,
+                            'props'        : this.props
+                        }
+
+                    }
+                    this.setState({
+                        user_levels  : levels ,
+                        user_name    : name ,
+                        user_part    : part,
+                        session      : wkDateObj.session
+                    })
+
+                    this.fncWeekDate(wkDateObj)
+                    this.handleSelectOptions(part)
+                    console.log(this.props)
+
+                }
+            )
+    }  
 
     isWeekday = date => {
         const day = getDay(date)
@@ -59,21 +92,25 @@ class ReportHome extends Component{
     }
 
     componentDidMount() {
-        setTimeout(() => {
-            this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
-            this.handleSelectOptions()
-        }, 500)
+        console.log(this.props)
+        //this.handleSelectOptions()
+        //this.initializeUserInfo()
+        //setTimeout(() => {
+            //this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
+            //this.handleSelectOptions()
+        //}, 500)
     }
 
-    handleSelectOptions(){
-        const {info} = this.props.user //info.part
+    handleSelectOptions(user_part){
+        //const {user_part} = this.state //info.part
         let query = {'type':'SELECT' ,'menu':'REPORT','url':this.state.api_url + '/getSelectBox'}
         const selectOptions = cf_getSelectCode(query);
-
+        console.log('::::::handleSelectOptions:::::::::')
+        console.log(this.state)
         try{
             selectOptions.then(result => {
                     result.json().then(json => { 
-                    //console.log(json)
+                    console.log(json)
                     if(json.result ==='Y'){
                         const v_optionsObj  = json.LIST
                         const v_selectObj   = {COMPLETE :[] ,GUBUN :[] ,TYPE :[] ,WEEK :[]}
@@ -86,7 +123,7 @@ class ReportHome extends Component{
                             let v_part   = v_optionsObj[k].part 
 
                             if(class_nm ==='GUBUN'){  //업부구분                              
-                                    if(v_part === info.part || v_part === 'ALL' ) //해당하는 파트 리스트만
+                                    if(v_part === user_part || v_part === 'ALL' ) //해당하는 파트 리스트만
                                         v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value })
                             }else{
                                 v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value })
@@ -99,7 +136,7 @@ class ReportHome extends Component{
                     }else{
                         alert(json.info.message)
                     } 
-                }) 
+                }).catch(err => console.log(err)); 
             })
         }catch(e){
             console.log(e)
@@ -107,15 +144,13 @@ class ReportHome extends Component{
 
     }
 
-    fncWeekDate = (currentWeek ,datePicker ,gubun) =>{
+    fncWeekDate = (wkDateObj) =>{
+        let {currentWeek ,datePicker ,gubun ,session} = wkDateObj
         console.log("::dates 달력 선택 일자::");
-        //console.log(currentWeek);
-        //console.log(Moment().week(25).format('YYYYMMDD'));
-        
         let weeks = Moment(datePicker).week()
-
+ 
         if(gubun ==="BTN")//버튼클릭시
-            weeks      = currentWeek
+            weeks = currentWeek
          
 
         //console.log("금요일 찾기 ::" + Moment().week(weeks-1).format('YYYYMMDD'));
@@ -131,11 +166,11 @@ class ReportHome extends Component{
         
         v_startDate     = Moment(datePicker).isoWeekday(5).week(weeks +(v_sDiff)).format('YYYY-MM-DD')//금요일
         v_endDate       = Moment(datePicker).isoWeekday(4).week(weeks +(v_eDiff)).format('YYYY-MM-DD')//목요일
-    
-        this.handleReportList(weeks ,v_startDate ,v_endDate)
+
+        this.handleReportList(weeks ,v_startDate ,v_endDate ,session)
     }
 
-    handleReportList = (weeks ,v_startDate ,v_endDate) => {
+    handleReportList = (weeks ,v_startDate ,v_endDate ,session) => {
         try {
             function getWeekNo(v_date_str) {
                 var date = new Date();
@@ -146,15 +181,16 @@ class ReportHome extends Component{
             }
 
             let v_weekState = 0
-            let v_currentWeeks = Moment().weeks()
-            if(weeks > v_currentWeeks ){//현재주차보다 많으면
+            let v_currentWeeks  = Moment().isoWeekday(5).week()
+            let v_prevWeek      = Moment(v_startDate).isoWeekday(5).week()//시작일이 지난주
+            if(v_prevWeek > v_currentWeeks ){//현재주차보다 많으면
                 v_weekState = v_weekState + 1
-            }else if(weeks < v_currentWeeks){
+            }else if(v_prevWeek < v_currentWeeks){
                 v_weekState = v_weekState - 1
             }
 
 
-            //console.log(weeks + '::::v_weekState::::::'+v_weekState)
+            //console.log(weeks + '::::v_weekState::::::'+v_weekState + ':::::::::::::' + v_currentWeeks)
             let v_currWeek  = getWeekNo(v_startDate)
             let v_year      = Moment(v_startDate).format('YYYY')
             let v_month     = Moment(v_startDate).format('MM')
@@ -181,8 +217,8 @@ class ReportHome extends Component{
             form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
             form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
             form.append('url',           this.state.api_url + '/weekly_report') 
-            
-            cf_fetchPost(form ,this.props).then(result => {
+
+            cf_fetchPost(form ,session?session:this.state.session).then(result => {
                 result.json().then(json => 
                     this.setState({
                         LIST        : json.LIST,
@@ -230,7 +266,7 @@ class ReportHome extends Component{
         try {
             e.preventDefault()
             const {f_gubun ,f_title ,f_content ,f_document_num ,f_complete ,f_type 
-                ,start_dt ,end_dt ,currentWeek ,LIST} = this.state
+                ,start_dt ,end_dt ,currentWeek ,LIST ,api_url ,session} = this.state
 
             if(f_gubun ==='' || f_title ==='' || f_content ==='' 
                 || f_document_num ==='' || f_complete ==='' || f_type ==='' ){
@@ -251,9 +287,9 @@ class ReportHome extends Component{
             form.append('p_month',       Moment(start_dt).format('MM'))
             form.append('p_start_dt',    start_dt.replace(/-/gi,""))  
             form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
-            form.append('url',           this.state.api_url + '/weekly_report_insert')
+            form.append('url',           api_url + '/weekly_report_insert')
 
-            cf_fetchPost(form ,this.props).then(result => {
+            cf_fetchPost(form ,session).then(result => {
                 //console.log(result)
                 if(result.ok){
                     result.json().then(json => 
@@ -412,22 +448,35 @@ class ReportHome extends Component{
             return num.length < 2 ? '0' + num : num;
         }
         let datePicker = startDate.getFullYear() + pad(startDate.getMonth()+1) + pad(startDate.getDate());
+    
         this.setState({
-            select_dt : datePicker
+            select_dt   : datePicker 
         })
-        this.fncWeekDate(this.state.currentPage ,datePicker ,"CAL")
+
+        let wkDateObj ={
+            'currentWeek' : this.state.currentPage ,
+            'datePicker'  : datePicker,
+            'gubun'       : "CAL"
+        }
+
+        this.fncWeekDate(wkDateObj)
     }
 
     //버튼클릭시
     handlerPagingClick = (e ,index) =>{
         e.preventDefault();
-        this.fncWeekDate(index ,this.state.select_dt , "BTN")
+        let wkDateObj ={
+            'currentWeek' : index ,
+            'datePicker'  : this.state.select_dt,
+            'gubun'       : "BTN"
+        }
+        this.fncWeekDate(wkDateObj)
     }
 
     //버튼클릭시
     handlerReportCopy = (index) =>{
         try {
-            const {first_start_dt ,first_year ,first_month ,first_week ,api_url } = this.state
+            const {first_start_dt ,first_year ,first_month ,first_week ,api_url ,session } = this.state
 
             let form = new FormData() 
             form.append('p_id',             index)
@@ -437,7 +486,7 @@ class ReportHome extends Component{
             form.append('p_week',           first_week)   
             form.append('url',              api_url + '/weekly_report_copy')
 
-            cf_fetchPost(form ,this.props).then(result => {
+            cf_fetchPost(form ,session).then(result => {
                 if(result.ok){
                     result.json().then(json => 
                         alert(json.message)
@@ -453,10 +502,11 @@ class ReportHome extends Component{
     }
 
     render(){
-        const {EDITING} = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,
+        const {EDITING } = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,
         //const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
         console.log("::REPORT::")
 
+        //this.initComponent()
         // options.gubun.push(
         //     {name:'업무구분' ,value:''},
         //     {name:'CRESYS'  ,value:'CRESYS'},
@@ -501,7 +551,6 @@ class ReportHome extends Component{
         )
     }
 }
-//export default ReportHome; 
 
 const mapState = (state) => ({
     user: state.session.user,

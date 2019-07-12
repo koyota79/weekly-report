@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Redirect  } from 'react-router-dom';
+import { sessionService } from 'redux-react-session';
 import * as sessionActions  from '../action/SessionActions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -9,6 +9,17 @@ class Main extends Component{
     state = {
         isTrue      : false
     }
+
+    componentWillMount() {
+        const userSession = sessionService.loadUser();
+              userSession.then(response => { 
+                    console.log('::::MAIN componentWillMount:::::')
+                    console.log(response)
+                }
+              )
+    
+    }   
+
     render(){
         console.log("MAIN")
         console.log(this.props)
