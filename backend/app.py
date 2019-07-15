@@ -169,7 +169,7 @@ def weeklyList():
             print(v_month)
             print(v_start_dt)
             
-            v_query  = "select id, gubun, document_num, title ,content ,complete ,type ,old_id from weekly_report where user_id =%s and started=%s "
+            v_query  = "select id, gubun, document_num, title ,content ,issues ,complete ,type ,old_id from weekly_report where user_id =%s and started=%s "
             v_query += " order by id "
             v_param = (current_user['userId'] ,v_start_dt)
             list = ExecuteQuery(v_query,v_param)
@@ -202,15 +202,17 @@ def insertWeeklyReport():
       v_gubun         = request.form.get('p_gubun', None)
       v_document_num  = request.form.get('p_document_num', None)
       v_content       = request.form.get('p_content', None)
+      v_issues        = request.form.get('p_issues', None)
       v_title         = request.form.get('p_title', None)
       v_complete      = request.form.get('p_complete', None)
       v_type          = request.form.get('p_type', None)
+      
   
       con     = mysql.connect()
       cursor  = con.cursor()
-      query   = "INSERT INTO weekly_report (user_id ,started ,year ,month ,week ,gubun, document_num, title ,content ,complete ,type)"
-      query   +="VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-      values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num  ,v_title ,v_content ,v_complete ,v_type)
+      query   = "INSERT INTO weekly_report (user_id ,started ,year ,month ,week ,gubun, document_num, title ,content ,issues ,complete ,type)"
+      query   +="VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+      values  = (v_user_id ,v_start_dt ,v_year ,v_month ,v_week ,v_gubun ,v_document_num  ,v_title ,v_content ,v_issues ,v_complete ,v_type)
       cursor.execute(query, values)
       v_insertId = con.insert_id()
       con.commit()
@@ -256,15 +258,16 @@ def updateWeeklyReport():
       v_id            = request.form.get('id', None)
       v_gubun         = request.form.get('p_gubun', None)
       v_document_num  = request.form.get('p_document_num', None)
-      v_content       = request.form.get('p_content', None)
       v_title         = request.form.get('p_title', None)
+      v_content       = request.form.get('p_content', None)
+      v_issues        = request.form.get('p_issues', None)
       v_complete      = request.form.get('p_complete', None)
       v_type          = request.form.get('p_type', None)
   
       con     = mysql.connect()
       cursor  = con.cursor()
-      query   = "UPDATE weekly_report SET gubun = %s ,document_num = %s ,content = %s ,title = %s ,complete = %s ,type = %s WHERE id = %s "
-      values  = (v_gubun ,v_document_num , v_content ,v_title ,v_complete ,v_type ,v_id)
+      query   = "UPDATE weekly_report SET gubun = %s ,document_num = %s ,content = %s ,issues = %s ,title = %s ,complete = %s ,type = %s WHERE id = %s "
+      values  = (v_gubun ,v_document_num , v_content ,v_issues ,v_title ,v_complete ,v_type ,v_id)
       cursor.execute(query, values)
       con.commit()
       con.close()
@@ -348,8 +351,8 @@ def WeeklyReportCopy():
          cursor  = con.cursor()
 
          query   = "insert into weekly_report (user_id ,started ,year ,month ,week,gubun "
-         query   +=",document_num ,title ,content,complete ,type ,old_id) "
-         query   +="select user_id ,%s ,%s ,%s ,%s ,gubun ,document_num ,title ,content ,complete ,type ,%s "
+         query   +=",document_num ,title ,content ,issues ,complete ,type ,old_id) "
+         query   +="select user_id ,%s ,%s ,%s ,%s ,gubun ,document_num ,title ,content ,issues ,complete ,type ,%s "
          query   +="from weekly_report where id =%s "
 
 
@@ -393,7 +396,7 @@ def reportManagerList():
           
           v_query  = "select a.name ,b.gubun as gubun_mng ,b.gubun ,b.document_num ,b.title "
           v_query += ",b.content ,b.complete ,b.user_id ,b.type ,b.started as started__H  "
-          v_query += ",a.commute   ,a.part as part__H ,a.levels as levels__H "
+          v_query += ",b.issues   ,a.part as part__H ,a.levels as levels__H "
           v_query += "from member a "
           v_query += "inner join weekly_report b "
           v_query += "on a.user_id = b.user_id "

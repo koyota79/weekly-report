@@ -16,7 +16,7 @@ const List = (props ) => {
                 <tr>
                     {
                         props.data.HEDER.map((item,i) => (
-                            <th key={i}  style={{ textAlign : "center" , width :props.data.H_WIDTH[i]+"px" }} className="fontSize_14">
+                            <th key={i}  style={{ textAlign : "center" , width :props.data.H_WIDTH[i]+"px" }} className="fontSize_12">
                                 {item}
                             </th>
                         ))
@@ -31,7 +31,7 @@ const List = (props ) => {
                             {
                                 Object.getOwnPropertyNames( props.data.LIST[0]).map((keyObj ,n) => {
                                     return ( (!keyObj.includes("id") && !keyObj.includes("__H"))?(
-                                                <td key={n} onDoubleClick={() => props.onDoubleClick(item) } className="fontSize_13" > 
+                                                <td key={n} onDoubleClick={() => props.data.btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
                                                     {item[keyObj]}
                                                 </td>
                                             ):(null)
@@ -78,7 +78,7 @@ const List = (props ) => {
                      </tr>
                  </thead>
                  <tbody>
-                     <tr><td  colSpan="8" style={{ textAlign: 'center'}}>NO DATA</td></tr>
+                     <tr><td  colSpan={props.data.H_WIDTH.length} style={{ textAlign: 'center'}}>NO DATA</td></tr>
                  </tbody>
              </Table>
         )

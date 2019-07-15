@@ -26,8 +26,8 @@ class ReportHome extends Component{
     constructor(props) {
         super(props)
         this.state =  {
-            HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"내용" ,"완료여부" ,"유형",""], //헤더는 항상 첫번째에 위치
-            H_WIDTH         : ["60","70","200","300","0","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
+            HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"처리내용" ,"이슈사항" ,"완료여부" ,"유형",""], //헤더는 항상 첫번째에 위치
+            H_WIDTH         : ["60","70","200","300","0","150","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
             numbering       : true,
             btn_use         : true,
             id              : "",
@@ -35,6 +35,9 @@ class ReportHome extends Component{
             document_num    : "",
             title           : "",
             content         : "",
+            type            : "",
+            complete        : "",
+            issues          : "",
             old_id          : "",
             api_url         : process.env.REACT_APP_API_URL,
             LIST            : [],
@@ -147,6 +150,7 @@ class ReportHome extends Component{
     fncWeekDate = (wkDateObj) =>{
         let {currentWeek ,datePicker ,gubun ,session} = wkDateObj
         console.log("::dates 달력 선택 일자::");
+
         let weeks = Moment(datePicker).week()
  
         if(gubun ==="BTN")//버튼클릭시
@@ -166,6 +170,10 @@ class ReportHome extends Component{
         
         v_startDate     = Moment(datePicker).isoWeekday(5).week(weeks +(v_sDiff)).format('YYYY-MM-DD')//금요일
         v_endDate       = Moment(datePicker).isoWeekday(4).week(weeks +(v_eDiff)).format('YYYY-MM-DD')//목요일
+        
+        //변경시 form 초기화
+        const resetTrigger = this.refs.resetTrigger
+        resetTrigger.click()
 
         this.handleReportList(weeks ,v_startDate ,v_endDate ,session)
     }
@@ -180,22 +188,23 @@ class ReportHome extends Component{
                 return Math.ceil(date.getDate() / 7);
             }
 
-            let v_weekState = 0
-            let v_currentWeeks  = Moment().isoWeekday(5).week()
-            let v_prevWeek      = Moment(v_startDate).isoWeekday(5).week()//시작일이 지난주
-            if(v_prevWeek > v_currentWeeks ){//현재주차보다 많으면
-                v_weekState = v_weekState + 1
-            }else if(v_prevWeek < v_currentWeeks){
-                v_weekState = v_weekState - 1
-            }
-
-
             //console.log(weeks + '::::v_weekState::::::'+v_weekState + ':::::::::::::' + v_currentWeeks)
             let v_currWeek  = getWeekNo(v_startDate)
             let v_year      = Moment(v_startDate).format('YYYY')
             let v_month     = Moment(v_startDate).format('MM')
 
             const { first_start_dt ,first_year ,first_month ,first_week } = this.state;
+            let v_firstDate = first_start_dt?first_start_dt:v_startDate
+            let v_weekState = 0
+            let v_currentWeeks  = Moment(v_firstDate).isoWeekday(5).week()
+            let v_prevWeek      = Moment(v_startDate).isoWeekday(5).week()//시작일이 지난주
+            if(v_prevWeek > v_currentWeeks ){//현재주차보다 많으면
+                v_weekState = 0//v_weekState + 1
+            }else if(v_prevWeek < v_currentWeeks){
+                v_weekState = v_weekState - 1
+            }
+
+
             this.setState({
                 start_dt        : v_startDate,
                 end_dt          : v_endDate,
@@ -203,7 +212,7 @@ class ReportHome extends Component{
                 currentWeek     : v_currWeek,
                 nowWeek         : v_weekState,
 
-                first_start_dt  : first_start_dt?first_start_dt:v_startDate,
+                first_start_dt  : v_firstDate,
                 first_year      : first_year?first_year:v_year,
                 first_month     : first_month?first_month:v_month,
                 first_week      : first_week?first_week:weeks
@@ -242,11 +251,13 @@ class ReportHome extends Component{
             f_content         : "",
             f_complete        : "",
             f_type            : "",
+            f_issues          : "",
             EDITING           : false
         })
     }
 
     handlerSelectRow = (rowData) =>{
+        if(this.state.nowWeek < 0){return}
         let form_id = Object.getOwnPropertyNames( rowData );
         //console.log(this.textInput)
         this.setState({
@@ -258,6 +269,7 @@ class ReportHome extends Component{
             f_content       : rowData.content,
             f_complete      : rowData.complete,
             f_type          : rowData.type,
+            f_issues        : rowData.issues,
             FORM_ID         : form_id
         });
     }
@@ -265,7 +277,7 @@ class ReportHome extends Component{
     handleCreate = (e) => {
         try {
             e.preventDefault()
-            const {f_gubun ,f_title ,f_content ,f_document_num ,f_complete ,f_type 
+            const {f_gubun ,f_title ,f_content ,f_document_num ,f_complete ,f_type ,f_issues
                 ,start_dt ,end_dt ,currentWeek ,LIST ,api_url ,session} = this.state
 
             if(f_gubun ==='' || f_title ==='' || f_content ==='' 
@@ -280,7 +292,9 @@ class ReportHome extends Component{
             form.append('p_content',      f_content)
             form.append('p_document_num', f_document_num)
             form.append('p_complete',     f_complete)
-            form.append('p_type',         f_type)
+            form.append('p_type',         f_type) 
+            form.append('p_issues',       f_issues) 
+            
 
             form.append('p_week',        currentWeek)
             form.append('p_year',        Moment(start_dt).format('YYYY'))
@@ -301,6 +315,7 @@ class ReportHome extends Component{
                             f_content         : "",
                             f_complete        : "",
                             f_type            : "",
+                            f_issues          : "",
                             statusText        : 'OK',
                             EDITING           : false,
 
@@ -311,7 +326,8 @@ class ReportHome extends Component{
                                 title           : f_title,
                                 content         : f_content,
                                 complete        : f_complete,
-                                type            : f_type 
+                                type            : f_type ,
+                                issues          : f_issues
                             })
                         })
                     )
@@ -368,6 +384,8 @@ class ReportHome extends Component{
             form.append('p_document_num'  ,chgData.document_num)
             form.append('p_complete'      ,chgData.complete)
             form.append('p_type'          ,chgData.type)
+            form.append('p_issues'        ,chgData.issues)
+            
 
             axios.post(this.state.api_url + '/weekly_report_update', form
             ).then(response => { 
@@ -385,6 +403,7 @@ class ReportHome extends Component{
                         f_content         : "",
                         f_complete        : "",
                         f_type            : "",
+                        f_issues          : "",
                         statusText        : response.statusText,
                         EDITING           : false,
                         LIST: LIST.map(
@@ -435,7 +454,8 @@ class ReportHome extends Component{
             content       : this.state.f_content,
             document_num  : this.state.f_document_num,
             complete      : this.state.f_complete,
-            type          : this.state.f_type
+            type          : this.state.f_type,
+            issues        : this.state.f_issues
           });
         }
     }
@@ -473,7 +493,6 @@ class ReportHome extends Component{
         this.fncWeekDate(wkDateObj)
     }
 
-    //버튼클릭시
     handlerReportCopy = (index) =>{
         try {
             const {first_start_dt ,first_year ,first_month ,first_week ,api_url ,session } = this.state
@@ -502,10 +521,13 @@ class ReportHome extends Component{
     }
 
     render(){
-        const {EDITING } = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,
+        const {EDITING ,nowWeek} = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,
         //const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
         console.log("::REPORT::")
-
+        let v_btnTrue = 'none'
+        if(nowWeek >= 0){
+            v_btnTrue = 'block'
+        }
         //this.initComponent()
         // options.gubun.push(
         //     {name:'업무구분' ,value:''},
@@ -517,20 +539,22 @@ class ReportHome extends Component{
         return ( 
             <div style={{ width: '100%'}}>
                 <div style={{ marginBottom: '15px' ,marginTop: '20px'}}>
-                    {
-                        (EDITING)?(
-                            <Button variant="success" className="float-right"  onClick={this.handleToggleEdit} > 
-                                수정
-                            </Button>
-                        ):(
-                            <Button variant="primary" className="float-right"   onClick={this.handleCreate}  > 
-                                저장
-                            </Button>
-                        )
-                    }
-                    <Button variant="secondary" className="float-right" style={{ marginRight: '5px'}}  onClick={this.handleReset}  > 
-                        취소
-                    </Button>
+                    <div style={{display:v_btnTrue}}>
+                        {
+                            (EDITING)?(
+                                <Button variant="success" className="float-right"  onClick={this.handleToggleEdit} > 
+                                    수정
+                                </Button>
+                            ):(
+                                <Button variant="primary" className="float-right"   onClick={this.handleCreate}  > 
+                                    저장
+                                </Button>
+                            )
+                        }
+                        <Button variant="secondary" className="float-right"   ref='resetTrigger' style={{ marginRight: '5px'}}  onClick={this.handleReset}  > 
+                            취소
+                        </Button>
+                    </div>
                     <div style={{marginLeft : "20px" ,marginTop : "5px" ,float : "left"}}>
                         <DatePicker selected={this.state.date} onChange={this.onDateChange} filterDate={this.isWeekday} dateFormat="yyyy/MM/dd"
                                 locale="kr" />
