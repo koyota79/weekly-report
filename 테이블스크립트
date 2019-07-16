@@ -68,3 +68,26 @@ AUTO_INCREMENT=1
 
 #INSERT INTO `report`.`cmn_code` (`type`, `class`, `code`, `value`) VALUES ('SELECT', 'COMPLETE', '완료', '완료');
 
+CREATE TABLE `weekly_report_close` (
+	`started` VARCHAR(8) NOT NULL DEFAULT '0',
+	`user_id` VARCHAR(50) NOT NULL,
+	`close_yn` VARCHAR(1) NOT NULL DEFAULT 'N',
+	`reg_dt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`upd_dt` DATETIME NOT NULL,
+	PRIMARY KEY (`started`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+
+CREATE TABLE `notice` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`user_id` VARCHAR(100) NOT NULL,
+	`title` VARCHAR(255) NOT NULL,
+	`content` TEXT NOT NULL,
+	`reg_dt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`)
+)
+ENGINE=InnoDB
+;

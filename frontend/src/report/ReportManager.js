@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { sessionService } from 'redux-react-session';
 import List from '../component/common/List';
+import { Button } from 'react-bootstrap';
+import axios from 'axios';
 import {cf_fetchPost ,cf_getDecodeToken} from '../component/common/CommonMethod';
 import Moment  from 'moment';
 import getDay from "date-fns/getDay";
@@ -19,7 +21,7 @@ class ReportManager extends Component{
             LIST            : [],
             date            : new Date(),            
             currentPage     : Moment().weeks(),
-            start_dt        : Moment().format('YYYY-MM-DD'),    
+            start_dt        : Moment().format('YYYY-MM-DD')
         }
     }
 
@@ -82,7 +84,7 @@ class ReportManager extends Component{
         
         v_startDate     = Moment(datePicker).isoWeekday(5).week(weeks +(v_sDiff)).format('YYYY-MM-DD')//금요일
         v_endDate       = Moment(datePicker).isoWeekday(4).week(weeks +(v_eDiff)).format('YYYY-MM-DD')//목요일
-
+        this.fnGetBtnState(v_startDate)
         this.handleReportMngList(weeks ,v_startDate ,v_endDate ,session)
     }
 
@@ -158,6 +160,32 @@ class ReportManager extends Component{
         this.fncWeekDate(wkDateObj)
     }
 
+    //리포트 마감
+    handlerCloseReport = (e) => {
+        e.preventDefault();
+        const {start_dt ,api_url ,isToggleOn} = this.state
+
+        let form = new FormData() 
+        form.append('p_started',    start_dt.replace(/-/gi,""))
+        form.append('p_closeYn',     isToggleOn?'N':'Y')    
+        form.append('url',           api_url + '/weekly_report_close') 
+
+        cf_fetchPost(form ,this.state.session).then(result => {
+            result.json().then(json => {  
+                if(json.result === 'Y'){
+                    alert(json.message)
+                    this.setState(({
+                        isToggleOn: json.close_yn==='Y'?true:false
+                    }))
+                }else(
+                    alert(json.message)
+                )
+            }).catch(err => console.log(err));              
+        }).catch(err => console.log(err));
+
+    }
+
+
     componentDidUpdate(prevProps, prevState) {
         // 여기서는, editing 값이 바뀔 때 처리 할 로직이 적혀있습니다.
         // 수정을 눌렀을땐, 기존의 값이 input에 나타나고,
@@ -180,18 +208,47 @@ class ReportManager extends Component{
           console.log(':::::::componentDidUpdate2222222:::')
         }
     }
+
+    //마감버튼 체크
+    fnGetBtnState(v_started){
+        const {api_url} = this.state   
+        axios.get(api_url + '/report_btn_status', {params : {'p_started' : v_started.replace(/-/gi,"")}}
+        ).then(response => {
+            const {result ,message ,close_yn} = response.data
+            if(result !== 'Y'){
+                alert(message)
+                return 
+            }else{
+                this.setState({isToggleOn : close_yn==='Y'?true:false})
+            }
+        });
+    }
+
+
     render(){
         console.log("ReportManager")
         console.log(this.props)
+
+        const {isToggleOn} = this.state
+        console.log(isToggleOn)
+
         return ( 
             <div style={{ width: '100%'}}>
-                    <div style={{marginLeft : "20px" ,marginTop : "5px" ,float : "left"}}>
-                        <DatePicker selected={this.state.date} onChange={this.onDateChange} filterDate={this.isWeekday} dateFormat="yyyy/MM/dd"
-                                locale="kr" />
-                    </div>                
-                    <div style={{ width: '300px'  ,marginLeft : "300px"  ,float : "left"}} >
-                        <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
+                    <div style={{marginTop : "20px"}}>
+                        <div style={{marginLeft : "20px" ,float : "left"}}>
+                            <DatePicker selected={this.state.date} onChange={this.onDateChange} filterDate={this.isWeekday} dateFormat="yyyy/MM/dd"
+                                    locale="kr" />
+                        </div>                
+                        <div style={{ width: '300px'  ,marginLeft : "380px"  ,float : "left"}} >
+                            <ListPaging data={this.state} onPagingClick={this.handlerPagingClick}/> 
+                        </div>
+                        <div style={{ width: '100px'  ,marginRight : "50px"  ,float : "right"}}>
+                            <Button variant={this.state.isToggleOn ? 'danger' : 'primary'} className="float-right"  onClick={this.handlerCloseReport}  > 
+                                {this.state.isToggleOn ? '마감취소' : '마감'}
+                            </Button>
+                        </div>
                     </div>
+
                     { this.state.statusText==="OK" ? (
                         <List data={this.state} onRemove={null} onReportCopy={null} onDoubleClick={null} />
                         ):(

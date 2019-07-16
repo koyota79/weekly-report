@@ -50,22 +50,30 @@ def ExecuteQuery(sql,param):
   return results
 
 
-@app.route('/'  , methods=['POST'])
+@app.route('/weekly_main_notice'  , methods=['POST'])
 @jwt_required
 def index(): 
-    logger.INFO("::::::index::::::::")
     app.logger.debug('second test message...')
-    logging.warning('Watch out!') # will print a message to the console
-    logging.info('I told you so') # will not print anything
-    current_user = get_jwt_identity()
-    print(current_user)
-    response = {'token' : '' ,
-                'user'  : {
-                       'name'    : '',
-                       'levels'  : 0 ,
-                       'message' : ''  
-                      }
-    }
+
+
+    try:
+      if request.method == 'POST':
+          current_user = get_jwt_identity()
+          app.logger.debug(current_user)
+
+          v_query  = "select id ,user_id ,title ,content ,DATE_FORMAT(reg_dt ,'%%Y-%%m-%%d') from notice order by id limit %s "
+   
+          v_param = (5)
+          list = ExecuteQuery(v_query,v_param)
+
+          response = {'result'   : 'Y' , "LIST"   : list  ,'message' : '조회성공'}
+      else :
+          response = {'result'   : 'N' , "LIST"   : []    ,'message' : '잘못된 접근경로' }  
+  
+    except Exception as e: 
+            app.logger.debug(str(e)) 
+            response = {'result' : 'E', 'message' : str(e) }  
+
     return json.dumps(response)
 
 
@@ -286,6 +294,35 @@ def updateWeeklyReport():
 
 
 
+@app.route('/report_btn_status' ,methods=["GET"]) 
+def getReportBtnState():
+      response ={}    
+      try:
+        if request.method == 'GET':
+
+            v_started        = request.args.get('p_started')
+            print('::v_started::')
+            print(v_started)
+            con     = mysql.connect()
+            cursor  = con.cursor()
+
+            v_query   = "select case when count(close_yn) = 0 then 'N' else close_yn end from weekly_report_close where started =%s "
+            v_param = (v_started)
+
+            cursor.execute(v_query, v_param)
+            record = cursor.fetchone()
+            con.close()
+
+            response = {'result'  : 'Y' ,'message' : '조회성공' ,'close_yn' : record[0] }
+        else :
+            response = {'result'  : 'N' ,'message' : '잘못된 접근경로' }  
+    
+      except Exception as e: 
+             print("Exception_app_login" + str(e)) 
+             response = {'result' : 'N' , 'message' : str(e) }  
+
+      return json.dumps(response)  
+
 @app.route('/getSelectBox' ,methods=["GET" ,"POST"]) 
 def getSelectBoxList():
       response ={}    
@@ -415,6 +452,52 @@ def reportManagerList():
             response = {'result' : 'N' ,'info'  : { 'status' :'E' , 'message' : str(e) }}  
 
     return json.dumps(response)  
+
+
+
+@app.route('/weekly_report_close' ,methods=["POST"])
+@jwt_required
+def WeeklyReportClose():
+  try:    
+    if  request.method == 'POST':
+         current_user = get_jwt_identity()
+         print(current_user)
+         print(current_user['userId'])
+
+         v_started       = request.form.get('p_started', None)
+         v_userId        = current_user['userId']
+         v_closeYn       = request.form.get('p_closeYn', None)
+         
+         v_msg   = '마감 완료'
+         if v_closeYn == 'N' :
+            v_msg   = '마감 취소'
+
+         con     = mysql.connect()
+         cursor  = con.cursor()
+
+         query   = "insert into weekly_report_close (started ,user_id ,close_yn ) "
+         query   +="values (%s ,%s ,%s) "
+         query   +="ON DUPLICATE KEY "
+         query   +="update upd_dt = NOW() ,close_yn = %s "
+
+
+         values  = (v_started ,v_userId ,v_closeYn ,v_closeYn )
+         cursor.execute(query, values)
+         con.commit()
+         con.close()
+        
+         response = {'result'  : 'Y' ,'message' : v_msg ,'close_yn' : v_closeYn}
+    else :
+         response = {'result'  : 'N' ,'message' : '잘못된 접근경로'}  
+  
+  except Exception as e: 
+         print("weekly_report_copy" + str(e)) 
+         response = {'result' : 'N' , 'message' : str(e) }  
+
+  return json.dumps(response)
+
+
+
 
 
 if __name__ == '__main__':

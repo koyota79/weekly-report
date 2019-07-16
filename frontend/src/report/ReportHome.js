@@ -51,7 +51,7 @@ class ReportHome extends Component{
             first_year      : "", 
             first_month     : "",
             first_week      : "",
-            
+            closeBtn        : false,
             EDITING         : false
         }
     }
@@ -95,13 +95,24 @@ class ReportHome extends Component{
     }
 
     componentDidMount() {
-        console.log(this.props)
-        //this.handleSelectOptions()
-        //this.initializeUserInfo()
-        //setTimeout(() => {
-            //this.fncWeekDate(this.state.currentPage ,this.state.start_dt,"CAL")
-            //this.handleSelectOptions()
-        //}, 500)
+        console.log(':::componentDidMount:::')
+        console.log(this.props)    
+    }
+
+    //리포트 마감버튼 체크
+    fnGetBtnState(v_started){
+        const {api_url} = this.state
+        return axios.get(api_url + '/report_btn_status', {params : {'p_started' : v_started.replace(/-/gi,"")}}
+        ).then(response => {
+            const {result ,message ,close_yn} = response.data
+            if(result !== 'Y'){
+                alert(message)
+                return 'E'
+            }else{
+                this.setState({ closeBtn : close_yn==='Y'?true:false})
+                return close_yn
+            }
+        });
     }
 
     handleSelectOptions(user_part){
@@ -175,6 +186,32 @@ class ReportHome extends Component{
         const resetTrigger = this.refs.resetTrigger
         resetTrigger.click()
 
+        let v_year      = Moment(v_startDate).format('YYYY')
+        let v_month     = Moment(v_startDate).format('MM')
+
+        const { first_start_dt ,first_year ,first_month ,first_week } = this.state;
+        let v_firstDate = first_start_dt?first_start_dt:v_startDate
+        let v_weekState = 0
+        let v_currentWeeks  = Moment(v_firstDate).isoWeekday(5).week()
+        let v_prevWeek      = Moment(v_startDate).isoWeekday(5).week()//시작일이 지난주
+
+        if(v_prevWeek > v_currentWeeks ){//현재주차보다 많으면
+            v_weekState = 0//v_weekState + 1
+        }else if(v_prevWeek < v_currentWeeks){
+            v_weekState = v_weekState - 1
+        }
+
+        this.setState({
+            nowWeek         : v_weekState,
+            year            : v_year,
+            month           : v_month,
+
+            first_start_dt  : v_firstDate,
+            first_year      : first_year?first_year:v_year,
+            first_month     : first_month?first_month:v_month,
+            first_week      : first_week?first_week:weeks
+        })
+        this.fnGetBtnState(v_startDate)
         this.handleReportList(weeks ,v_startDate ,v_endDate ,session)
     }
 
@@ -190,42 +227,22 @@ class ReportHome extends Component{
 
             //console.log(weeks + '::::v_weekState::::::'+v_weekState + ':::::::::::::' + v_currentWeeks)
             let v_currWeek  = getWeekNo(v_startDate)
-            let v_year      = Moment(v_startDate).format('YYYY')
-            let v_month     = Moment(v_startDate).format('MM')
-
-            const { first_start_dt ,first_year ,first_month ,first_week } = this.state;
-            let v_firstDate = first_start_dt?first_start_dt:v_startDate
-            let v_weekState = 0
-            let v_currentWeeks  = Moment(v_firstDate).isoWeekday(5).week()
-            let v_prevWeek      = Moment(v_startDate).isoWeekday(5).week()//시작일이 지난주
-            if(v_prevWeek > v_currentWeeks ){//현재주차보다 많으면
-                v_weekState = 0//v_weekState + 1
-            }else if(v_prevWeek < v_currentWeeks){
-                v_weekState = v_weekState - 1
-            }
-
-
             this.setState({
                 start_dt        : v_startDate,
                 end_dt          : v_endDate,
                 currentPage     : weeks,
-                currentWeek     : v_currWeek,
-                nowWeek         : v_weekState,
-
-                first_start_dt  : v_firstDate,
-                first_year      : first_year?first_year:v_year,
-                first_month     : first_month?first_month:v_month,
-                first_week      : first_week?first_week:weeks
+                currentWeek     : v_currWeek
             });
 
             console.log("첫시작날짜  ::"+v_startDate)
+            const {year ,month ,api_url} = this.state
             let form = new FormData() 
-            form.append('p_year',        v_year)
-            form.append('p_month',       v_month)
+            form.append('p_year',        year)
+            form.append('p_month',       month)
             form.append('p_week',        v_currWeek)
             form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
             form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
-            form.append('url',           this.state.api_url + '/weekly_report') 
+            form.append('url',           api_url + '/weekly_report') 
 
             cf_fetchPost(form ,session?session:this.state.session).then(result => {
                 result.json().then(json => 
@@ -280,61 +297,69 @@ class ReportHome extends Component{
             const {f_gubun ,f_title ,f_content ,f_document_num ,f_complete ,f_type ,f_issues
                 ,start_dt ,end_dt ,currentWeek ,LIST ,api_url ,session} = this.state
 
-            if(f_gubun ==='' || f_title ==='' || f_content ==='' 
-                || f_document_num ==='' || f_complete ==='' || f_type ==='' ){
-                alert('필수사항 미입력')
-                return
-            }
+            this.fnGetBtnState(start_dt).then(result => {
+                if(result ==='Y'){
+                    alert('현장관리자가 마감처리를 하였습니다.')
+                    return
+                }else if(result === 'N'){
 
-            let form = new FormData() 
-            form.append('p_gubun',        f_gubun) 
-            form.append('p_title',        f_title) 
-            form.append('p_content',      f_content)
-            form.append('p_document_num', f_document_num)
-            form.append('p_complete',     f_complete)
-            form.append('p_type',         f_type) 
-            form.append('p_issues',       f_issues) 
-            
-
-            form.append('p_week',        currentWeek)
-            form.append('p_year',        Moment(start_dt).format('YYYY'))
-            form.append('p_month',       Moment(start_dt).format('MM'))
-            form.append('p_start_dt',    start_dt.replace(/-/gi,""))  
-            form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
-            form.append('url',           api_url + '/weekly_report_insert')
-
-            cf_fetchPost(form ,session).then(result => {
-                //console.log(result)
-                if(result.ok){
-                    result.json().then(json => 
-                        this.setState({
-                            id                : "",
-                            f_gubun           : "",
-                            f_document_num    : "",
-                            f_title           : "",
-                            f_content         : "",
-                            f_complete        : "",
-                            f_type            : "",
-                            f_issues          : "",
-                            statusText        : 'OK',
-                            EDITING           : false,
-
-                            LIST : LIST.concat({
-                                id              : json.insertId,
-                                gubun           : f_gubun,
-                                document_num    : f_document_num,
-                                title           : f_title,
-                                content         : f_content,
-                                complete        : f_complete,
-                                type            : f_type ,
-                                issues          : f_issues
-                            })
-                        })
-                    )
-                }else{
-                    result.json().then(json => alert(json.msg))
-                }
-            }).catch(err => console.log(err))
+                    if(f_gubun ==='' || f_title ==='' || f_content ==='' || f_document_num ==='' 
+                    || f_complete ==='' || f_type ==='' ){
+                        alert('필수사항 미입력')
+                        return
+                    }
+        
+                    let form = new FormData() 
+                    form.append('p_gubun',        f_gubun) 
+                    form.append('p_title',        f_title) 
+                    form.append('p_content',      f_content)
+                    form.append('p_document_num', f_document_num)
+                    form.append('p_complete',     f_complete)
+                    form.append('p_type',         f_type) 
+                    form.append('p_issues',       f_issues) 
+                    
+        
+                    form.append('p_week',        currentWeek)
+                    form.append('p_year',        Moment(start_dt).format('YYYY'))
+                    form.append('p_month',       Moment(start_dt).format('MM'))
+                    form.append('p_start_dt',    start_dt.replace(/-/gi,""))  
+                    form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
+                    form.append('url',           api_url + '/weekly_report_insert')
+        
+                    cf_fetchPost(form ,session).then(result => {
+                        //console.log(result)
+                        if(result.ok){
+                            result.json().then(json => 
+                                this.setState({
+                                    id                : "",
+                                    f_gubun           : "",
+                                    f_document_num    : "",
+                                    f_title           : "",
+                                    f_content         : "",
+                                    f_complete        : "",
+                                    f_type            : "",
+                                    f_issues          : "",
+                                    statusText        : 'OK',
+                                    EDITING           : false,
+        
+                                    LIST : LIST.concat({
+                                        id              : json.insertId,
+                                        gubun           : f_gubun,
+                                        document_num    : f_document_num,
+                                        title           : f_title,
+                                        content         : f_content,
+                                        complete        : f_complete,
+                                        type            : f_type ,
+                                        issues          : f_issues
+                                    })
+                                })
+                            )
+                        }else{
+                            result.json().then(json => alert(json.msg))
+                        }
+                    }).catch(err => console.log(err))
+                }//end if result                    
+            });
         } catch (e) {
             alert(e);
         }      
@@ -521,11 +546,12 @@ class ReportHome extends Component{
     }
 
     render(){
-        const {EDITING ,nowWeek} = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,
+        const {EDITING ,closeBtn} = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,nowWeek
         //const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
         console.log("::REPORT::")
+  
         let v_btnTrue = 'none'
-        if(nowWeek >= 0){
+        if(!closeBtn){
             v_btnTrue = 'block'
         }
         //this.initComponent()
