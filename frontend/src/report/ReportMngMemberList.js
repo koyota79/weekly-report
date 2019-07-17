@@ -18,7 +18,7 @@ export const MemberListCnt = (props ) => {
         <tbody>
 
         {         
-           props.data.LIST_SUB.map((item,i) => 
+           props.data.LIST_SUB.lms?(props.data.LIST_SUB.map((item,i) => 
              <tr key={i}><th scope="row">성명</th>
                     <td>
                       {
@@ -52,6 +52,8 @@ export const MemberListCnt = (props ) => {
                     </td>
              </tr>
            )
+           ):(null)
+
         }
         </tbody>
       </Table>
