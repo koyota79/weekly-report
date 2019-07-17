@@ -8,6 +8,8 @@ import Moment  from 'moment';
 import getDay from "date-fns/getDay";
 import ListPaging from '../component/common/ListPaging';
 import DatePicker ,{registerLocale} from 'react-datepicker';
+import {MemberListCnt} from './ReportMngMemberList';
+
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 
@@ -15,10 +17,11 @@ class ReportManager extends Component{
     constructor(props) {
         super(props)
         this.state =  {
-            HEDER           : ["성명" ,"담당업무" ,"시스템명" ,"문서번호" ,"제목" ,"처리내역" ,"완료여부" ,"유형","이슈사항"], //헤더는 항상 첫번째에 위치
-            H_WIDTH         : ["60","70","70","200","250","0","100","80","100"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
+            HEDER           : ["시스템명" ,"성명" ,"담당업무" ,"문서번호" ,"제목" ,"처리내역" ,"완료여부" ,"유형","이슈사항"], //헤더는 항상 첫번째에 위치
+            H_WIDTH         : ["80","70","70","200","250","0","100","80","100"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
             api_url         : process.env.REACT_APP_API_URL,
             LIST            : [],
+            LIST_SUB        : [],
             date            : new Date(),            
             currentPage     : Moment().weeks(),
             start_dt        : Moment().format('YYYY-MM-DD')
@@ -117,6 +120,7 @@ class ReportManager extends Component{
                 result.json().then(json => 
                     this.setState({
                         LIST        : json.LIST,
+                        LIST_SUB    : json.LIST_SUB,
                         statusText  : 'OK',
                     }) 
                 ).catch(err => console.log(err));              
@@ -234,6 +238,9 @@ class ReportManager extends Component{
 
         return ( 
             <div style={{ width: '100%'}}>
+                    <div>
+                        <MemberListCnt data={this.state}/>
+                    </div>
                     <div style={{marginTop : "20px"}}>
                         <div style={{marginLeft : "20px" ,float : "left"}}>
                             <DatePicker selected={this.state.date} onChange={this.onDateChange} filterDate={this.isWeekday} dateFormat="yyyy/MM/dd"

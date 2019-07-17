@@ -9,6 +9,7 @@ const List = (props ) => {
     console.log(props);
     console.log(":::::::::LIST2::::::::::::::" ); 
     let v_btnWeek = props.data.nowWeek
+    let tepmRows =  0
     return props.data.LIST.length > 0 ?(
       
             <Table striped bordered hover size="sm">
@@ -26,14 +27,29 @@ const List = (props ) => {
             <tbody>
                 {
                     props.data.LIST.map((item,i) => (
-                        <tr key={i} className={(props.data.EDITING && props.data.id===item.id)?"upd-corlor":""}> 
+                        <tr key={i}  className={(props.data.EDITING && props.data.id===item.id)?"upd-corlor":""}> 
                             {props.data.numbering?<td>{i+1}</td>:null}
                             {
                                 Object.getOwnPropertyNames( props.data.LIST[0]).map((keyObj ,n) => {
+                                        let rowCnt   = item['rowspan__H']
+                                        let rowsPan  = null
+                                        if( tepmRows < rowCnt && keyObj.includes("gubun_mng")){
+                                            rowsPan = rowCnt
+                                        }else{
+                                            rowsPan = null
+                                        }
+
+                                        tepmRows = rowCnt
                                     return ( (!keyObj.includes("id") && !keyObj.includes("__H"))?(
-                                                <td key={n} onDoubleClick={() => props.data.btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
+                                                rowsPan?(
+                                                    <td key={n} rowSpan={rowsPan} onDoubleClick={() => props.data.btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
                                                     {item[keyObj]}
-                                                </td>
+                                                    </td>
+                                                ):(
+                                                    !keyObj.includes("gubun_mng")?(<td key={n} onDoubleClick={() => props.data.btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
+                                                        {item[keyObj]}
+                                                    </td>):(null) 
+                                                  )
                                             ):(null)
                                     )
                                 })
@@ -66,7 +82,6 @@ const List = (props ) => {
         </Table>
     ):(
         (   
-
             <Table striped bordered hover size="sm">
                 <thead>
                      <tr>
@@ -82,7 +97,6 @@ const List = (props ) => {
                  </tbody>
              </Table>
         )
-    
     );
 }
 

@@ -413,37 +413,60 @@ def WeeklyReportCopy():
 @jwt_required
 def reportManagerList():
     response ={}    
-    auth_header = request.headers.get('Authorization') 
-    print(auth_header)
     try:
       if request.method == 'POST':
           current_user = get_jwt_identity()
-          print(current_user)
-          print(current_user['userId'])
-
-
 
           v_week         = request.form.get('p_week', None)
           v_month        = request.form.get('p_month', None)
           v_start_dt     = request.form.get('p_start_dt', None)
-
-          print(":::::::::::::::")
-          print(v_month)
-          print(v_start_dt)
           
-          v_query  = "select a.name ,b.gubun as gubun_mng ,b.gubun ,b.document_num ,b.title "
+          v_query  ="select "
+          v_query += "   x.* "
+          v_query += "   ,ROW_NUMBER() OVER (PARTITION BY x.part__H	ORDER BY x.rowspan__H desc)r_num__H  "
+          v_query += "from( "
+          v_query += "select case when a.part = 'MOBILE' then '모바일' when a.part ='UNIT' then '단위업무' else a.part end as gubun_mng "
+          v_query += ",a.name ,b.gubun ,b.document_num ,b.title "
           v_query += ",b.content ,b.complete ,b.user_id ,b.type ,b.started as started__H  "
           v_query += ",b.issues   ,a.part as part__H ,a.levels as levels__H "
+          v_query += ",ROW_NUMBER() OVER (PARTITION BY a.part ORDER BY a.part) AS rowspan__H "
           v_query += "from member a "
           v_query += "inner join weekly_report b "
           v_query += "on a.user_id = b.user_id "
           v_query += "where started =%s "
-          v_query += "order by levels desc ,gubun ,user_id ,started desc "
-
+          v_query += ")x "
+          #v_query += "order by a.part asc ,levels desc ,gubun ,user_id ,started desc "
 
           v_param = (v_start_dt)
           list = ExecuteQuery(v_query,v_param)
-          response = { "result"   : "Y" , "LIST"     : list  , 'info'  : { 'status' :'S' , 'message' : '조회성공' }}
+
+          v_query_sub  = "select "
+          v_query_sub += "   group_concat(x.lms) as lms "
+          v_query_sub += "  ,group_concat(x.mobile) as mobile "
+          v_query_sub += "  ,group_concat(x.unit) as unit "
+          v_query_sub += "from( "
+          v_query_sub += "  select  "
+          v_query_sub += "     case when a.part = 'LMS'    then concat(a.name,' (', count(b.title),')') else null end as lms "
+          v_query_sub += "    ,case when a.part = 'MOBILE' then concat(a.name,' (', count(b.title),')') else null end as mobile "
+          v_query_sub += "    ,case when a.part = 'UNIT'   then concat(a.name,' (', count(b.title),')') else null end as unit "
+            
+          v_query_sub += "  from member a "
+          v_query_sub += "  left outer join weekly_report b "
+          v_query_sub += "  on a.user_id = b.user_id "
+          v_query_sub += "    and  %s = started "
+          v_query_sub += "  where  1=1 "
+          v_query_sub += "    and levels < 3 "
+          v_query_sub += "  group by name ,part ,commute  "
+          v_query_sub += "  order by part ,levels desc )x "
+
+
+          v_param_sub = (v_start_dt)
+          list_sub = ExecuteQuery(v_query_sub ,v_param_sub)
+
+
+
+
+          response = { "result"   : "Y" , "LIST"     : list  ,'LIST_SUB' : list_sub, 'info'  : { 'status' :'S' , 'message' : '조회성공' }}
       else :
           response = {'result'    : 'N' ,'info'  : { 'status' :'E' , 'message' : '잘못된 접근경로' }}  
   
