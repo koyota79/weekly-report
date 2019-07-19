@@ -15,9 +15,9 @@ export const login = (user ,history) => {
     form.append('p_password',    user.password)
     const response = axios.post(process.env.REACT_APP_API_URL+'/login', form);
 
-    return new Promise(resolve => setTimeout(resolve(response), 1000));
+    return new Promise(resolve => setTimeout(resolve(response), 500));
   };
   
 export const logout = () => {
-  return new Promise(resolve => setTimeout(resolve, 1000));
+  return new Promise(resolve => setTimeout(resolve, 500));
 };

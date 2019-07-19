@@ -4,7 +4,6 @@ import { Table } from 'reactstrap';
 //export default class Example extends React.Component {
   //render() {
 export const MemberListCnt = (props ) => {
-      
     return (
       <Table bordered style={{fontSize : '12px'}}>
         <thead>
@@ -18,12 +17,12 @@ export const MemberListCnt = (props ) => {
         <tbody>
 
         {         
-           props.data.LIST_SUB.lms?(props.data.LIST_SUB.map((item,i) => 
+            props.data.LIST_SUB.map((item,i) => 
              <tr key={i}><th scope="row">성명</th>
                     <td>
                       {
-                        item.lms.split(',').map( line => 
-                          ( <span> 
+                        item.lms.split(',').map( (line,j) => 
+                          ( <span key={j} > 
                               { line.indexOf('(0)')>0?<span style={{color:'red'}}>{line}</span>:line }
                               <br/> 
                             </span> 
@@ -32,8 +31,8 @@ export const MemberListCnt = (props ) => {
                     </td>
                     <td>
                       {
-                        item.mobile.split(',').map( line => 
-                          ( <span> 
+                        item.mobile.split(',').map( (line,j) => 
+                          ( <span key={j} > 
                             { line.indexOf('(0)')>0?<span style={{color:'red'}}>{line}</span>:line }
                             <br/> 
                             </span> 
@@ -42,8 +41,8 @@ export const MemberListCnt = (props ) => {
                     </td>
                     <td>
                       {
-                        item.unit.split(',').map( line => 
-                            ( <span> 
+                        item.unit.split(',').map( (line,j) => 
+                            ( <span key={j} > 
                                 { line.indexOf('(0)')>0?<span style={{color:'red'}}>{line}</span>:line }
                                 <br/> 
                               </span> 
@@ -51,9 +50,7 @@ export const MemberListCnt = (props ) => {
                       }
                     </td>
              </tr>
-           )
-           ):(null)
-
+            )
         }
         </tbody>
       </Table>

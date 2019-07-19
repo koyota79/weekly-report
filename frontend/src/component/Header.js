@@ -18,7 +18,7 @@ class Header extends Component{
     componentWillMount() {
       //console.log('::::Header1:::::')
       sessionService.loadUser().then(response => { 
-                  console.log(response.access_token)
+                  //console.log(response.access_token)
                   let level_class = ''
                   var access_token = response.access_token
                   const {levels ,name ,userId} = cf_getDecodeToken(access_token)
@@ -54,7 +54,7 @@ class Header extends Component{
     }
 
     render(){
-      //console.log('::::Header render:::::')
+      console.log('::::Header render:::::')
       //console.log(this.state)
       const {userLevels} = this.state
 

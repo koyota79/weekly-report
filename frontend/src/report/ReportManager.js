@@ -24,6 +24,7 @@ class ReportManager extends Component{
             LIST_SUB        : [],
             date            : new Date(),            
             currentPage     : Moment().weeks(),
+            value           : true,
             start_dt        : Moment().format('YYYY-MM-DD')
         }
     }
@@ -104,12 +105,12 @@ class ReportManager extends Component{
 
             //console.log(weeks + '::::v_weekState::::::'+v_weekState + ':::::::::::::' + v_currentWeeks)
             let v_currWeek  = getWeekNo(v_startDate)
-            this.setState({
-                start_dt        : v_startDate,
-                end_dt          : v_endDate,
-                currentPage     : weeks,
-                currentWeek     : v_currWeek
-            });
+            // this.setState({
+            //     start_dt        : v_startDate,
+            //     end_dt          : v_endDate,
+            //     currentPage     : weeks,
+            //     currentWeek     : v_currWeek
+            // });
 
             //const {session} = reportMngObj.session
             let form = new FormData() 
@@ -119,16 +120,24 @@ class ReportManager extends Component{
             cf_fetchPost(form ,session?session:this.state.session).then(result => {
                 result.json().then(json => 
                     this.setState({
-                        LIST        : json.LIST,
-                        LIST_SUB    : json.LIST_SUB,
-                        statusText  : 'OK',
+                        LIST            : json.LIST,
+                        LIST_SUB        : json.LIST_SUB,
+                        statusText      : 'OK',
+
+                        start_dt        : v_startDate,
+                        end_dt          : v_endDate,
+                        currentPage     : weeks,
+                        currentWeek     : v_currWeek,
+
+                        value           : !this.state.value
                     }) 
                 ).catch(err => console.log(err));              
             }).catch(err => console.log(err));
-
+           
         } catch (e) {
             alert(e)
         }
+      
     }
 
     //달력 선택시
@@ -179,7 +188,8 @@ class ReportManager extends Component{
                 if(json.result === 'Y'){
                     alert(json.message)
                     this.setState(({
-                        isToggleOn: json.close_yn==='Y'?true:false
+                        isToggleOn: json.close_yn==='Y'?true:false ,
+                        value     : !this.state.value
                     }))
                 }else(
                     alert(json.message)
@@ -228,6 +238,9 @@ class ReportManager extends Component{
         });
     }
 
+    shouldComponentUpdate(nextProps, nextState){
+        return this.state.value !== nextState.value;
+    }
 
     render(){
         console.log("ReportManager")

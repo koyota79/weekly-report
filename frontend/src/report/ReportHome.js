@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 //import Config from 'react-native-config'
 import axios from 'axios';
 import List from '../component/common/List';
-import {cf_fetchPost ,cf_getSelectCode ,cf_getDecodeToken} from '../component/common/CommonMethod';
+import {cf_fetchPost ,cf_fetchPost2,cf_getSelectCode ,cf_getDecodeToken} from '../component/common/CommonMethod';
 import ListPaging from '../component/common/ListPaging';
 //import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap'; //Form  ,Table 
@@ -61,30 +61,16 @@ class ReportHome extends Component{
                 userSession.then(response => { 
                     console.log(':::::componentWillMount MAIN::::::')
                     const access_token = response.access_token
-                    const {levels ,name ,part} = cf_getDecodeToken(access_token)
+                    const {part} = cf_getDecodeToken(access_token)
                     const {currentPage , start_dt} = this.state
 
                     let wkDateObj = {
                         'currentWeek'  : currentPage ,
                         'datePicker'   : start_dt ,
                         'gubun'        : 'CAL' ,
-                        'session'      : {
-                            'access_token' : access_token,
-                            'props'        : this.props
-                        }
-
                     }
-                    this.setState({
-                        user_levels  : levels ,
-                        user_name    : name ,
-                        user_part    : part,
-                        session      : wkDateObj.session
-                    })
-
                     this.fncWeekDate(wkDateObj)
                     this.handleSelectOptions(part)
-                    console.log(this.props)
-
                 }
             )
     }  
@@ -95,8 +81,8 @@ class ReportHome extends Component{
     }
 
     componentDidMount() {
-        console.log(':::componentDidMount:::')
-        console.log(this.props)    
+        //console.log(':::componentDidMount:::')
+        //console.log(this.props)    
     }
 
     //리포트 마감버튼 체크
@@ -119,12 +105,12 @@ class ReportHome extends Component{
         //const {user_part} = this.state //info.part
         let query = {'type':'SELECT' ,'menu':'REPORT','url':this.state.api_url + '/getSelectBox'}
         const selectOptions = cf_getSelectCode(query);
-        console.log('::::::handleSelectOptions:::::::::')
-        console.log(this.state)
+        //console.log('::::::handleSelectOptions:::::::::')
+        //console.log(this.state)
         try{
             selectOptions.then(result => {
                     result.json().then(json => { 
-                    console.log(json)
+                    //console.log(json)
                     if(json.result ==='Y'){
                         const v_optionsObj  = json.LIST
                         const v_selectObj   = {COMPLETE :[] ,GUBUN :[] ,TYPE :[] ,WEEK :[]}
@@ -159,7 +145,7 @@ class ReportHome extends Component{
     }
 
     fncWeekDate = (wkDateObj) =>{
-        let {currentWeek ,datePicker ,gubun ,session} = wkDateObj
+        let {currentWeek ,datePicker ,gubun} = wkDateObj
         console.log("::dates 달력 선택 일자::");
 
         let weeks = Moment(datePicker).week()
@@ -205,17 +191,16 @@ class ReportHome extends Component{
             nowWeek         : v_weekState,
             year            : v_year,
             month           : v_month,
-
             first_start_dt  : v_firstDate,
             first_year      : first_year?first_year:v_year,
             first_month     : first_month?first_month:v_month,
-            first_week      : first_week?first_week:weeks
+            first_week      : first_week?first_week:weeks,
         })
         this.fnGetBtnState(v_startDate)
-        this.handleReportList(weeks ,v_startDate ,v_endDate ,session)
+        this.handleReportList(weeks ,v_startDate ,v_endDate)
     }
 
-    handleReportList = (weeks ,v_startDate ,v_endDate ,session) => {
+    handleReportList = (weeks ,v_startDate ,v_endDate) => {
         try {
             function getWeekNo(v_date_str) {
                 var date = new Date();
@@ -227,14 +212,14 @@ class ReportHome extends Component{
 
             //console.log(weeks + '::::v_weekState::::::'+v_weekState + ':::::::::::::' + v_currentWeeks)
             let v_currWeek  = getWeekNo(v_startDate)
-            this.setState({
-                start_dt        : v_startDate,
-                end_dt          : v_endDate,
-                currentPage     : weeks,
-                currentWeek     : v_currWeek
-            });
+            // this.setState({
+            //     start_dt        : v_startDate,
+            //     end_dt          : v_endDate,
+            //     currentPage     : weeks,
+            //     currentWeek     : v_currWeek
+            // });
 
-            console.log("첫시작날짜  ::"+v_startDate)
+            //console.log("첫시작날짜  ::"+v_startDate)
             const {year ,month ,api_url} = this.state
             let form = new FormData() 
             form.append('p_year',        year)
@@ -244,11 +229,16 @@ class ReportHome extends Component{
             form.append('p_end_dt',      v_endDate.replace(/-/gi,"")) 
             form.append('url',           api_url + '/weekly_report') 
 
-            cf_fetchPost(form ,session?session:this.state.session).then(result => {
+            cf_fetchPost2(form ,this.props).then(result => {
                 result.json().then(json => 
                     this.setState({
-                        LIST        : json.LIST,
-                        statusText  : 'OK',
+                        LIST         : json.LIST,
+                        statusText   : 'OK',
+
+                        start_dt     : v_startDate,
+                        end_dt       : v_endDate,
+                        currentPage  : weeks,
+                        currentWeek  : v_currWeek
                     }) 
                 ).catch(err => console.log(err));              
             }).catch(err => console.log(err));
@@ -274,7 +264,8 @@ class ReportHome extends Component{
     }
 
     handlerSelectRow = (rowData) =>{
-        if(this.state.nowWeek < 0){return}
+        const {nowWeek ,closeBtn } = this.state
+        if(nowWeek < 0 && closeBtn){return}
         let form_id = Object.getOwnPropertyNames( rowData );
         //console.log(this.textInput)
         this.setState({
@@ -295,7 +286,7 @@ class ReportHome extends Component{
         try {
             e.preventDefault()
             const {f_gubun ,f_title ,f_content ,f_document_num ,f_complete ,f_type ,f_issues
-                ,start_dt ,end_dt ,currentWeek ,LIST ,api_url ,session} = this.state
+                ,start_dt ,end_dt ,currentWeek ,LIST ,api_url} = this.state
 
             this.fnGetBtnState(start_dt).then(result => {
                 if(result ==='Y'){
@@ -326,7 +317,7 @@ class ReportHome extends Component{
                     form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
                     form.append('url',           api_url + '/weekly_report_insert')
         
-                    cf_fetchPost(form ,session).then(result => {
+                    cf_fetchPost2(form ,this.props).then(result => {
                         //console.log(result)
                         if(result.ok){
                             result.json().then(json => 
@@ -383,7 +374,7 @@ class ReportHome extends Component{
             form.append('id', id) 
             axios.post(this.state.api_url + '/weekly_report_delete', form
             ).then(response => { 
-                console.log(response);
+                //console.log(response);
                 if(response.data ==='Y'){
                     this.setState({
                         LIST        : LIST.filter(LIST => LIST.id !== id),
@@ -414,12 +405,7 @@ class ReportHome extends Component{
 
             axios.post(this.state.api_url + '/weekly_report_update', form
             ).then(response => { 
-                console.log("::::response:1::::")
-                console.log(this.state)
-                console.log(response)
-                console.log("::::response:2::::")
                 if(response.data.result ==='Y'){
-                
                     this.setState({
                         id                : "",
                         f_gubun           : "",
@@ -450,19 +436,19 @@ class ReportHome extends Component{
         // 여기서는, editing 값이 바뀔 때 처리 할 로직이 적혀있습니다.
         // 수정을 눌렀을땐, 기존의 값이 input에 나타나고,
         // 수정을 적용할땐, input 의 값들을 부모한테 전달해줍니다.
-        console.log(':::prevState::');
-        console.log(prevState);
+        //console.log(':::prevState::');
+        //console.log(prevState);
         const { LIST,id ,f_week } = this.state;
 
         if(f_week !== prevState.f_week){
-            console.log(":::GET LIST ::::")
+            //console.log(":::GET LIST ::::")
             this.handleReportList()
         }
 
         if(!prevState.EDITING && this.state.EDITING) {
           // editing 값이 false -> true 로 전환 될 때
           // info 의 값을 state 에 넣어준다
-          console.log(':::::::componentDidUpdate1111111:::')
+         // console.log(':::::::componentDidUpdate1111111:::')
           this.setState({
             ...LIST
           })
@@ -470,7 +456,7 @@ class ReportHome extends Component{
     
         if (prevState.EDITING && !this.state.EDITING) { 
           // editing 값이 true -> false 로 전환 될 때
-          console.log(':::::::componentDidUpdate2222222:::')
+          //console.log(':::::::componentDidUpdate2222222:::')
           if(!id)return
 
           this.handleUpdate(id,{
@@ -487,7 +473,7 @@ class ReportHome extends Component{
 
     //달력 선택시
     onDateChange = ( startDate) => {
-        this.setState({date : startDate})
+
         function pad(num) {
             num = num + '';
             return num.length < 2 ? '0' + num : num;
@@ -495,6 +481,7 @@ class ReportHome extends Component{
         let datePicker = startDate.getFullYear() + pad(startDate.getMonth()+1) + pad(startDate.getDate());
     
         this.setState({
+            date        : startDate,
             select_dt   : datePicker 
         })
 
@@ -520,7 +507,7 @@ class ReportHome extends Component{
 
     handlerReportCopy = (index) =>{
         try {
-            const {first_start_dt ,first_year ,first_month ,first_week ,api_url ,session } = this.state
+            const {first_start_dt ,first_year ,first_month ,first_week ,api_url} = this.state
 
             let form = new FormData() 
             form.append('p_id',             index)
@@ -530,7 +517,7 @@ class ReportHome extends Component{
             form.append('p_week',           first_week)   
             form.append('url',              api_url + '/weekly_report_copy')
 
-            cf_fetchPost(form ,session).then(result => {
+            cf_fetchPost2(form ,this.props).then(result => {
                 if(result.ok){
                     result.json().then(json => 
                         alert(json.message)
@@ -586,7 +573,7 @@ class ReportHome extends Component{
                                 locale="kr" />
                     </div>
 
-                    <div style={{ width: '300px'  ,marginLeft : "300px"  ,float : "left"}} >
+                    <div style={{ width: '300px'  ,marginLeft : "450px"  ,float : "left"}} >
                         <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
                 </div>

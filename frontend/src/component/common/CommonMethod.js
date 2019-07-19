@@ -1,5 +1,6 @@
 import React from 'react';
 import * as JWT from 'jwt-decode';
+import { sessionService } from 'redux-react-session';
 // const reqHeader = new Headers({
 //     //"Content-Type": "multipart/form-data",
 //     'Authorization': 'Bearer '+ user.access_token,
@@ -119,4 +120,51 @@ export const cf_getDecodeToken = (access_token) => {
     console.log(":::cf_getDecodeToken decode:::::")
     console.log(jwtDecode)
     return jwtDecode.identity
+}
+
+
+
+
+
+
+export const cf_fetchPost2 = (form ,props) => {
+    return sessionService.loadUser().then(result => {
+        const access_token = result.access_token
+        const v_url        = form.get('url')
+        if(access_token !== undefined && access_token !== null){
+            const reqHeader = new Headers({'Authorization': 'Bearer '+ access_token,});
+            return fetch(
+                        v_url, {
+                            method  : "POST",
+                            body    : form,
+                            headers : reqHeader
+                        }
+                    ).then(response => {
+                        console.log('::::::cnfetch2::::')
+                        console.log(response)
+                        if (response.ok) {
+                            return response
+                        } else {
+                            if(response.status === 401){
+                                response.json().then(json => {
+                                    props.actions.logout(props.history)
+                                    alert(json.msg)
+                                })
+                            }else{
+                                response.json().then(json => console.log(json.msg))
+                                return response
+                            }
+                        }
+                    }).catch(err =>  {
+                        alert(err.message);
+                    });
+            
+        }else{
+            props.actions.logout(props.history)
+            throw new Error("token 만료")
+        }
+
+    })
+
+    
 }

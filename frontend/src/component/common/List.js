@@ -5,10 +5,10 @@ import Table from 'react-bootstrap/Table';
 import {Button  } from 'react-bootstrap';
 
 const List = (props ) => {
-    console.log(":::::::::LIST1::::::::::::::" ); 
-    console.log(props);
-    console.log(":::::::::LIST2::::::::::::::" ); 
-    let v_btnWeek = props.data.nowWeek
+    //console.log(":::::::::LIST1::::::::::::::" ); 
+    //console.log(props);
+
+    const {closeBtn ,nowWeek ,btn_use} = props.data
     let tepmRows =  0
     return props.data.LIST.length > 0 ?(
       
@@ -42,11 +42,11 @@ const List = (props ) => {
                                         tepmRows = rowCnt
                                     return ( (!keyObj.includes("id") && !keyObj.includes("__H"))?(
                                                 rowsPan?(
-                                                    <td key={n} rowSpan={rowsPan} onDoubleClick={() => props.data.btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
+                                                    <td key={n} rowSpan={rowsPan} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
                                                     {item[keyObj]}
                                                     </td>
                                                 ):(
-                                                    !keyObj.includes("gubun_mng")?(<td key={n} onDoubleClick={() => props.data.btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
+                                                    !keyObj.includes("gubun_mng")?(<td key={n} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
                                                         {item[keyObj]}
                                                     </td>):(null) 
                                                   )
@@ -58,12 +58,12 @@ const List = (props ) => {
                                 <td> 
                                     {
                                         (() => {
-                                            if (v_btnWeek === 0){ return (<div>
+                                            if (nowWeek === 0 || !closeBtn){ return (<div>
                                                 <Button variant="danger" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onRemove(item.id)}  > 
                                                     삭제
                                                 </Button>
                                             </div>);
-                                            }else if (v_btnWeek < 0){ return (<div>
+                                            }else if (nowWeek < 0){ return (<div>
                                                 <Button variant="success" size="sm" className="fontSize_10" style={{ marginLeft: '10px'}}  onClick={() => props.onReportCopy(item.id)}  > 
                                                     복사
                                                 </Button>

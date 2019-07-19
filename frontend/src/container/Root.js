@@ -21,7 +21,6 @@ const Root = ({ authenticated, checked }) => (
     <Router>
         { checked &&
         <div>
-            {authenticated?<Header/>:""}
             <Switch>
                 <PrivateRoute exact path="/" component={Main} authenticated={authenticated}/>
                 <PrivateRoute path="/report" component={Report} authenticated={authenticated}/>
