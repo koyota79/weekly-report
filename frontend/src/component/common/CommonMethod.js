@@ -147,6 +147,8 @@ export const cf_fetchPost2 = (form ,props) => {
                         } else {
                             if(response.status === 401){
                                 response.json().then(json => {
+                                    console.log('::::::props::::::')
+                                    console.log(props)
                                     props.actions.logout(props.history)
                                     alert(json.msg)
                                 })

@@ -94,7 +94,7 @@ ENGINE=InnoDB
 ;
 
 
-CREATE TABLE `report_gubun_rank` (
+CREATE TABLE `report_rank` (
 	`user_id` VARCHAR(100) NULL DEFAULT NULL,
 	`part` VARCHAR(10) NULL DEFAULT NULL,
 	`gubun` VARCHAR(100) NULL DEFAULT NULL,
@@ -114,13 +114,6 @@ ENGINE=InnoDB
 
 
 
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_report_manager`()
-LANGUAGE SQL
-NOT DETERMINISTIC
-CONTAINS SQL
-SQL SECURITY DEFINER
-COMMENT ''
 BEGIN
 		DECLARE v_cnt, v_rank ,V_ROW_CNT INT DEFAULT 0;
 		DECLARE v_user_id ,v_part ,v_gubun varchar(50) DEFAULT "";	
@@ -130,10 +123,10 @@ BEGIN
 		#DEClARE cur_list CURSOR FOR
 		
 		
-		DELETE FROM report_gubun_rank;
+		DELETE FROM report_rank;
 		
 		
-		INSERT into report_gubun_rank 
+		INSERT into report_rank 
 		select 
 			x.user_id ,x.part ,x.gubun ,x.cnt
 		  ,row_number() over (partition by x.user_id ,x.name ,x.part order by x.cnt desc) as rank
@@ -147,7 +140,7 @@ BEGIN
 		)x;
 		
 		
-		select count(1) into v_row_cnt from report_gubun_rank;
+		select count(1) into v_row_cnt from report_rank;
 		
 		if v_row_cnt < 1 then
 			rollback;
@@ -171,7 +164,7 @@ BEGIN
 		 		END IF;
 		 		
 		 				 	
-			   INSERT into report_gubun_rank (user_id ,part ,gubun ,r_cnt ,r_rank) VALUES (v_user_id ,v_part ,v_gubun ,v_cnt ,v_rank) ON
+			   INSERT into report_rank (user_id ,part ,gubun ,r_cnt ,r_rank) VALUES (v_user_id ,v_part ,v_gubun ,v_cnt ,v_rank) ON
 			   DUPLICATE KEY 
 				UPDATE r_cnt = (r_cnt + v_cnt)  ,r_rank = (r_rank + v_rank);
 

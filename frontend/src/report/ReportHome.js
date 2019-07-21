@@ -114,6 +114,7 @@ class ReportHome extends Component{
                     if(json.result ==='Y'){
                         const v_optionsObj  = json.LIST
                         const v_selectObj   = {COMPLETE :[] ,GUBUN :[] ,TYPE :[] ,WEEK :[]}
+                        let v_gubun_cd      = ''
                         for (let k = 0; k < v_optionsObj.length; k++) { 
                             //console.log(v_optionsObj[k]); 
                             let class_nm = '';
@@ -121,17 +122,24 @@ class ReportHome extends Component{
                             let v_name   = v_optionsObj[k].name 
                             let v_value  = v_optionsObj[k].value 
                             let v_part   = v_optionsObj[k].part 
+                            let v_rank   = v_optionsObj[k].r_rank 
+                            let v_cnt    = v_optionsObj[k].r_cnt 
 
                             if(class_nm ==='GUBUN'){  //업부구분                              
-                                    if(v_part === user_part || v_part === 'ALL' ) //해당하는 파트 리스트만
+                                    if(v_part === user_part || v_part === 'ALL' ){ //해당하는 파트 리스트만
                                         v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value })
+                                        if(v_rank === 1 && v_cnt > 0){
+                                            v_gubun_cd = v_value
+                                        }
+                                    }
+                                        
                             }else{
                                 v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value })
                             } 
                         }                    
                         //console.log(v_selectObj)
                         this.setState({
-                            selectOptions : v_selectObj
+                            selectOptions : v_selectObj ,f_gubun : v_gubun_cd
                         })
                     }else{
                         alert(json.info.message)
@@ -212,14 +220,6 @@ class ReportHome extends Component{
 
             //console.log(weeks + '::::v_weekState::::::'+v_weekState + ':::::::::::::' + v_currentWeeks)
             let v_currWeek  = getWeekNo(v_startDate)
-            // this.setState({
-            //     start_dt        : v_startDate,
-            //     end_dt          : v_endDate,
-            //     currentPage     : weeks,
-            //     currentWeek     : v_currWeek
-            // });
-
-            //console.log("첫시작날짜  ::"+v_startDate)
             const {year ,month ,api_url} = this.state
             let form = new FormData() 
             form.append('p_year',        year)
@@ -573,7 +573,7 @@ class ReportHome extends Component{
                                 locale="kr" />
                     </div>
 
-                    <div style={{ width: '300px'  ,marginLeft : "450px"  ,float : "left"}} >
+                    <div style={{ width: '300px'  ,marginLeft : "23%"  ,float : "left"}} >
                         <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
                 </div>

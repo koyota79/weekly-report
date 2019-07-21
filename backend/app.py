@@ -337,8 +337,13 @@ def getSelectBoxList():
 
             print(':::['+v_type + ':::::' + v_menu + ':::::' + v_class + '::::' + v_part + ']:::')
 
-            v_query   = "select * from cmn_code where "
-            v_query  +="type =%s "
+            v_query   = "select a.* ,b.r_cnt  "
+            v_query  += ",case when a.orders = 0 then 0 else IFNULL(b.r_rank,a.orders) end as r_rank "
+            v_query  += "from cmn_code a "
+            v_query  += "left outer join report_rank b "
+            v_query  += "on a.part = b.part  and a.value = b.gubun " 
+            v_query  += "where type =%s "
+
             v_param = (v_type, )
 
             if v_part != '' :
@@ -353,7 +358,7 @@ def getSelectBoxList():
               v_query +=" and class=%s"
               v_param = v_param + (v_class,)
 
-            v_query +=" order by class ,orders"
+            v_query +=" order by r_rank ,orders "
           
             print(':::::v_query:::::' + v_query)
 
@@ -423,18 +428,20 @@ def reportManagerList():
           
           v_query  ="select "
           v_query += "   x.* "
-          v_query += "   ,ROW_NUMBER() OVER (PARTITION BY x.part__H	ORDER BY x.rowspan__H desc)r_num__H  "
+          v_query += "   ,ROW_NUMBER() OVER (PARTITION BY x.part__H	) AS rowspan__H  "
+          v_query += "   ,ROW_NUMBER() OVER (PARTITION BY x.part__H ,x.name )as rowspan_name__H "
           v_query += "from( "
           v_query += "select case when a.part = 'MOBILE' then '모바일' when a.part ='UNIT' then '단위업무' else a.part end as gubun_mng "
-          v_query += ",a.name ,b.gubun ,b.document_num ,b.title "
+          v_query += ",a.name ,a.part ,b.gubun ,b.document_num ,b.title "
           v_query += ",b.content ,b.complete ,b.user_id ,b.type ,b.started as started__H  "
           v_query += ",b.issues   ,a.part as part__H ,a.levels as levels__H "
-          v_query += ",ROW_NUMBER() OVER (PARTITION BY a.part ORDER BY a.part) AS rowspan__H "
+          #v_query += ",ROW_NUMBER() OVER (PARTITION BY a.part ORDER BY a.part) AS r_num__H "
+          #v_query += ",ROW_NUMBER() OVER (PARTITION BY a.part ,a.name ORDER BY a.part) AS r_name__H "
           v_query += "from member a "
           v_query += "inner join weekly_report b "
           v_query += "on a.user_id = b.user_id "
-          v_query += "where started =%s "
-          v_query += ")x "
+          v_query += "where b.started =%s and a.levels < 3 "
+          v_query += ")x order by x.part ,rowspan__H desc ,rowspan_name__H desc "
           #v_query += "order by a.part asc ,levels desc ,gubun ,user_id ,started desc "
 
           v_param = (v_start_dt)

@@ -9,7 +9,9 @@ const List = (props ) => {
     //console.log(props);
 
     const {closeBtn ,nowWeek ,btn_use} = props.data
-    let tepmRows =  0
+    let tepmRows     =  0
+    let tepmRows_2   =  0
+    let tepmName     =  ''
     return props.data.LIST.length > 0 ?(
       
             <Table striped bordered hover size="sm">
@@ -31,25 +33,48 @@ const List = (props ) => {
                             {props.data.numbering?<td>{i+1}</td>:null}
                             {
                                 Object.getOwnPropertyNames( props.data.LIST[0]).map((keyObj ,n) => {
-                                        let rowCnt   = item['rowspan__H']
-                                        let rowsPan  = null
-                                        if( tepmRows < rowCnt && keyObj.includes("gubun_mng")){
-                                            rowsPan = rowCnt
-                                        }else{
-                                            rowsPan = null
+                                        let rowCnt          = item['rowspan__H']
+                                        let rowCnt_2        = item['rowspan_name__H']
+                                        let v_name          = item['name']
+                                        let rowsPan         = null
+                                        let rowsPan_2       = null
+                                        let isTrue          = false
+   
+                                        if(keyObj === 'gubun_mng'){
+                                            if(tepmRows < rowCnt)
+                                                rowsPan = rowCnt
+
+                                            tepmRows    = rowCnt        
                                         }
 
-                                        tepmRows = rowCnt
+
+                                        if(keyObj === 'name'){
+                                            if(tepmRows_2 < rowCnt_2 )
+                                                rowsPan_2 = rowCnt_2
+                                            else if(tepmName !== v_name && rowCnt_2 ===1 )
+                                                isTrue = true
+
+                                            tepmRows_2    = rowCnt_2  
+                                            tepmName      = v_name  
+                                        }
+
+      
                                     return ( (!keyObj.includes("id") && !keyObj.includes("__H"))?(
                                                 rowsPan?(
                                                     <td key={n} rowSpan={rowsPan} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
                                                     {item[keyObj]}
                                                     </td>
                                                 ):(
-                                                    !keyObj.includes("gubun_mng")?(<td key={n} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
+                                                    rowsPan_2?(
+                                                        <td key={n} rowSpan={rowsPan_2} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
                                                         {item[keyObj]}
-                                                    </td>):(null) 
-                                                  )
+                                                        </td>
+                                                    ):(
+                                                        (!keyObj.includes("gubun_mng") && (!keyObj.includes("name") || isTrue))?(<td key={n} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
+                                                            {item[keyObj]}
+                                                        </td>):(null) 
+                                                    )
+                                                )
                                             ):(null)
                                     )
                                 })

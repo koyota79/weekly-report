@@ -3,13 +3,15 @@ import { sessionService } from 'redux-react-session';
 import List from '../component/common/List';
 import { Button } from 'react-bootstrap';
 import axios from 'axios';
-import {cf_fetchPost ,cf_getDecodeToken} from '../component/common/CommonMethod';
+import {cf_fetchPost ,cf_getDecodeToken ,cf_fetchPost2} from '../component/common/CommonMethod';
 import Moment  from 'moment';
 import getDay from "date-fns/getDay";
 import ListPaging from '../component/common/ListPaging';
 import DatePicker ,{registerLocale} from 'react-datepicker';
 import {MemberListCnt} from './ReportMngMemberList';
-
+import * as sessionActions  from '../action/SessionActions';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 
@@ -30,34 +32,15 @@ class ReportManager extends Component{
     }
 
     componentWillMount() {
-        const userSession = sessionService.loadUser();
-              userSession.then(response => { 
-                    console.log('::::ReportManager componentWillMount:::::')
-                    console.log(response)
-                    const access_token = response.access_token
-                    const {levels ,name ,part} = cf_getDecodeToken(access_token)
-                    const {currentPage , start_dt} = this.state
 
-                    let reportMngObj = {
-                        'currentWeek'  : currentPage ,
-                        'datePicker'   : start_dt ,
-                        'gubun'        : 'CAL' ,                        
-                        'session'      : {
-                            'access_token' : access_token,
-                            'props'        : this.props
-                        }
+        const {currentPage , start_dt} = this.state
+        let reportMngObj = {
+            'currentWeek'  : currentPage ,
+            'datePicker'   : start_dt ,
+            'gubun'        : 'CAL'                        
 
-                    }
-                    this.setState({
-                        user_levels  : levels ,
-                        user_name    : name ,
-                        user_part    : part,
-                        session      : reportMngObj.session
-                    })  
-                    this.fncWeekDate(reportMngObj)
-                  
-                }
-        )
+        } 
+        this.fncWeekDate(reportMngObj)        
     }   
 
     isWeekday = date => {
@@ -66,7 +49,7 @@ class ReportManager extends Component{
     }
 
     fncWeekDate = (wkDateObj) =>{
-        let {currentWeek ,datePicker ,gubun ,session} = wkDateObj
+        let {currentWeek ,datePicker ,gubun} = wkDateObj
         console.log("::dates 달력 선택 일자::");
 
         let weeks = Moment(datePicker).week()
@@ -89,10 +72,10 @@ class ReportManager extends Component{
         v_startDate     = Moment(datePicker).isoWeekday(5).week(weeks +(v_sDiff)).format('YYYY-MM-DD')//금요일
         v_endDate       = Moment(datePicker).isoWeekday(4).week(weeks +(v_eDiff)).format('YYYY-MM-DD')//목요일
         this.fnGetBtnState(v_startDate)
-        this.handleReportMngList(weeks ,v_startDate ,v_endDate ,session)
+        this.handleReportMngList(weeks ,v_startDate ,v_endDate)
     }
 
-    handleReportMngList = (weeks ,v_startDate ,v_endDate ,session) => {
+    handleReportMngList = (weeks ,v_startDate ,v_endDate) => {
         try {
 
             function getWeekNo(v_date_str) {
@@ -105,19 +88,11 @@ class ReportManager extends Component{
 
             //console.log(weeks + '::::v_weekState::::::'+v_weekState + ':::::::::::::' + v_currentWeeks)
             let v_currWeek  = getWeekNo(v_startDate)
-            // this.setState({
-            //     start_dt        : v_startDate,
-            //     end_dt          : v_endDate,
-            //     currentPage     : weeks,
-            //     currentWeek     : v_currWeek
-            // });
-
-            //const {session} = reportMngObj.session
             let form = new FormData() 
             form.append('p_start_dt',    v_startDate.replace(/-/gi,""))  
             form.append('url',           this.state.api_url + '/report_manager') 
 
-            cf_fetchPost(form ,session?session:this.state.session).then(result => {
+            cf_fetchPost2(form ,this.props).then(result => {
                 result.json().then(json => 
                     this.setState({
                         LIST            : json.LIST,
@@ -183,7 +158,7 @@ class ReportManager extends Component{
         form.append('p_closeYn',     isToggleOn?'N':'Y')    
         form.append('url',           api_url + '/weekly_report_close') 
 
-        cf_fetchPost(form ,this.state.session).then(result => {
+        cf_fetchPost2(form ,this.props).then(result => {
             result.json().then(json => {  
                 if(json.result === 'Y'){
                     alert(json.message)
@@ -244,11 +219,7 @@ class ReportManager extends Component{
 
     render(){
         console.log("ReportManager")
-        console.log(this.props)
-
-        const {isToggleOn} = this.state
-        console.log(isToggleOn)
-
+        //console.log(this.props)
         return ( 
             <div style={{ width: '100%'}}>
                     <div>
@@ -280,4 +251,17 @@ class ReportManager extends Component{
     }
 }
 
-export default ReportManager
+//export default ReportManager
+
+const mapState = (state) => ({
+    user: state.session.user,
+    authenticated: state.session.authenticated
+});
+  
+const mapDispatch = (dispatch) => {
+    return {
+      actions: bindActionCreators(sessionActions, dispatch) 
+    };
+};
+
+export default connect(mapState, mapDispatch)(ReportManager);
