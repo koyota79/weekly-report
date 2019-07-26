@@ -1,17 +1,19 @@
 import React, { Component } from 'react';
-import { sessionService } from 'redux-react-session';
+//import { sessionService } from 'redux-react-session';
 import List from '../component/common/List';
 import { Button } from 'react-bootstrap';
 import axios from 'axios';
-import {cf_fetchPost ,cf_getDecodeToken ,cf_fetchPost2} from '../component/common/CommonMethod';
+import {cf_fetchPost2} from '../component/common/CommonMethod';
 import Moment  from 'moment';
 import getDay from "date-fns/getDay";
 import ListPaging from '../component/common/ListPaging';
+import UserInfoModal from '../component/UserInfoModal';
 import DatePicker ,{registerLocale} from 'react-datepicker';
-import {MemberListCnt} from './ReportMngMemberList';
+import ReportMngMemberList from './ReportMngMemberList';
 import * as sessionActions  from '../action/SessionActions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import {  Modal, ModalHeader, ModalBody, ModalFooter, Input} from 'reactstrap';
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 
@@ -20,10 +22,11 @@ class ReportManager extends Component{
         super(props)
         this.state =  {
             HEDER           : ["시스템명" ,"성명" ,"담당업무" ,"문서번호" ,"제목" ,"처리내역" ,"완료여부" ,"유형","이슈사항"], //헤더는 항상 첫번째에 위치
-            H_WIDTH         : ["80","70","70","200","250","0","100","80","100"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
+            H_WIDTH         : ["80","70","120","200","250","0","100","80","100"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
             api_url         : process.env.REACT_APP_API_URL,
             LIST            : [],
             LIST_SUB        : [],
+            modalIsOpen     : false,
             date            : new Date(),            
             currentPage     : Moment().weeks(),
             value           : true,
@@ -213,17 +216,27 @@ class ReportManager extends Component{
         });
     }
 
-    shouldComponentUpdate(nextProps, nextState){
-        return this.state.value !== nextState.value;
+    // shouldComponentUpdate(nextProps, nextState){
+    //     return this.state.value !== nextState.value;
+    // }
+
+    openModal = () => {
+        const { modalIsOpen  } = this.state;
+        this.setState({ modalIsOpen: !modalIsOpen ,value : true });
+    }
+
+    closeModal = () => {
+        console.log('closeModal')
+        this.setState({modalIsOpen: false ,value : false});
     }
 
     render(){
         console.log("ReportManager")
-        //console.log(this.props)
+       
         return ( 
             <div style={{ width: '100%'}}>
                     <div>
-                        <MemberListCnt data={this.state}/>
+                        <ReportMngMemberList data={this.state} />
                     </div>
                     <div style={{marginTop : "20px"}}>
                         <div style={{marginLeft : "20px" ,float : "left"}}>
@@ -239,7 +252,7 @@ class ReportManager extends Component{
                             </Button>
                         </div>
                     </div>
-
+                    <UserInfoModal isOpen={this.state.modalIsOpen}  onClose={this.closeModal}/>
                     { this.state.statusText==="OK" ? (
                         <List data={this.state} onRemove={null} onReportCopy={null} onDoubleClick={null} />
                         ):(

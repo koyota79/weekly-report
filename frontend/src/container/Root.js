@@ -13,7 +13,8 @@ import Login from '../login/Login';
 import Main from './Main';
 import PropTypes from 'prop-types';
 import * as sessionActions  from '../action/SessionActions';
-import Header from '../component/Header';
+import UserInfoManager from '../user/UserInfoManager';
+
 //import { createBrowserHistory } from "history";
 //const history = createBrowserHistory();
 
@@ -25,6 +26,7 @@ const Root = ({ authenticated, checked }) => (
                 <PrivateRoute exact path="/" component={Main} authenticated={authenticated}/>
                 <PrivateRoute path="/report" component={Report} authenticated={authenticated}/>
                 <PrivateRoute path="/report_manager" component={ReportManager} authenticated={authenticated}/>
+                <PrivateRoute path="/user_manager" component={UserInfoManager} authenticated={authenticated}/>
                 <Route path="/login" component={Login}/>
             </Switch>
         </div>

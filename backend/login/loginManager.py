@@ -10,7 +10,7 @@ class loginManager() :
         try :
             print("::::loginCheck:::::")
             cur = cux.cursor()
-            v_query  = "select count(1) ,name ,levels ,part ,commute from member where user_id =%s and password=%s "
+            v_query  = "select count(1) ,name ,levels ,part ,commute from member where user_id =%s and password=%s and use_yn = 'Y' "
             v_param  = (user_id ,password)
             cur.execute(v_query, v_param)
             record = cur.fetchone()

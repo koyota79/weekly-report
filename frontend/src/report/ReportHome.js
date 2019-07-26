@@ -27,7 +27,7 @@ class ReportHome extends Component{
         super(props)
         this.state =  {
             HEDER           : ["번호" ,"구분" ,"문서번호" ,"제목" ,"처리내용" ,"이슈사항" ,"완료여부" ,"유형",""], //헤더는 항상 첫번째에 위치
-            H_WIDTH         : ["60","70","200","300","0","150","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
+            H_WIDTH         : ["60","70","200","350","0","150","100","80","80"],//리스트 헤더의 width 값 헤더명 갯수 와 동일
             numbering       : true,
             btn_use         : true,
             id              : "",
@@ -61,7 +61,7 @@ class ReportHome extends Component{
                 userSession.then(response => { 
                     console.log(':::::componentWillMount MAIN::::::')
                     const access_token = response.access_token
-                    const {part} = cf_getDecodeToken(access_token)
+                    const {part,userId} = cf_getDecodeToken(access_token)
                     const {currentPage , start_dt} = this.state
 
                     let wkDateObj = {
@@ -70,7 +70,7 @@ class ReportHome extends Component{
                         'gubun'        : 'CAL' ,
                     }
                     this.fncWeekDate(wkDateObj)
-                    this.handleSelectOptions(part)
+                    this.handleSelectOptions(part ,userId)
                 }
             )
     }  
@@ -101,9 +101,9 @@ class ReportHome extends Component{
         });
     }
 
-    handleSelectOptions(user_part){
+    handleSelectOptions(user_part ,userId){
         //const {user_part} = this.state //info.part
-        let query = {'type':'SELECT' ,'menu':'REPORT','url':this.state.api_url + '/getSelectBox'}
+        let query = {'type':'SELECT' ,'menu':'REPORT','userId' : userId,'url':this.state.api_url + '/getSelectBox'}
         const selectOptions = cf_getSelectCode(query);
         //console.log('::::::handleSelectOptions:::::::::')
         //console.log(this.state)
@@ -124,17 +124,18 @@ class ReportHome extends Component{
                             let v_part   = v_optionsObj[k].part 
                             let v_rank   = v_optionsObj[k].r_rank 
                             let v_cnt    = v_optionsObj[k].r_cnt 
+                            let v_orders = v_optionsObj[k].orders 
 
                             if(class_nm ==='GUBUN'){  //업부구분                              
                                     if(v_part === user_part || v_part === 'ALL' ){ //해당하는 파트 리스트만
-                                        v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value })
+                                        v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value ,'orders' : v_orders })
                                         if(v_rank === 1 && v_cnt > 0){
                                             v_gubun_cd = v_value
                                         }
                                     }
                                         
                             }else{
-                                v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value })
+                                v_selectObj[class_nm].push({'name' : v_name ,'value' : v_value ,'orders' : v_orders })
                             } 
                         }                    
                         //console.log(v_selectObj)

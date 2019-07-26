@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
-import { sessionService } from 'redux-react-session';
-//import * as sessionActions  from '../action/SessionActions';
-//import { connect } from 'react-redux';
-//import { bindActionCreators } from 'redux';
+//import { sessionService } from 'redux-react-session';
+import * as sessionActions  from '../action/SessionActions';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 import MainNotice from '../component/MainNotice'; 
-import {cf_fetchPost,cf_fetchPost2 ,cf_getDecodeToken} from '../component/common/CommonMethod';
-
+import MainYearly from '../component/MainYearly'; 
+import {cf_fetchPost2 } from '../component/common/CommonMethod';
+//import Table from 'react-bootstrap/Table';
 //import LogoutButton from '../component/LogoutButton';
 
 class Main extends Component{
@@ -28,7 +29,8 @@ class Main extends Component{
                     if(json.result ==='Y'){
                         console.log(json.LIST)
                         this.setState({
-                            LIST : json.LIST
+                            LIST : json.LIST ,
+                            info : json.info
                         })
                     }else{
                         alert(json.message)
@@ -42,30 +44,27 @@ class Main extends Component{
         console.log("MAIN")
         return ( 
             <div>
-                <div>top</div>
-                    <div>
-                        <div>test
-                        </div>
-                        <div style={{left : '15%' ,position : 'relative' ,width : '1000px'}}>
+                    <div style={{marginTop:'20px' ,width:'1300px' ,display :'inline-flex'}}>
+                        <MainYearly data={this.state} />
+                        <div style={{display:'inline-block' ,width :'850px' ,marginLeft:'50px'}}>
                             <MainNotice props={this.state}/>
                         </div>        
                     </div>
-                <div>Main</div>
             </div>
         )
     }
 }
 
-// const mapState = (state) => ({
-//     user: state.session.user,
-//     authenticated: state.session.authenticated
-//   });
+const mapState = (state) => ({
+    user: state.session.user,
+    authenticated: state.session.authenticated
+  });
   
-// const mapDispatch = (dispatch) => {
-//     return {
-//       actions: bindActionCreators(sessionActions, dispatch) 
-//     };
-// };
-// export default connect(mapState, mapDispatch)(Main);
+const mapDispatch = (dispatch) => {
+    return {
+      actions: bindActionCreators(sessionActions, dispatch) 
+    };
+};
+export default connect(mapState, mapDispatch)(Main);
 
-export default Main;
+//export default Main;

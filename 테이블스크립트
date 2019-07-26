@@ -110,6 +110,19 @@ ENGINE=InnoDB
 
 
 
+CREATE TABLE `yearly_mstr` (
+	`user_id` VARCHAR(50) NULL DEFAULT NULL,
+	`year` VARCHAR(4) NULL DEFAULT NULL,
+	`total_day` FLOAT NULL DEFAULT '15',
+	`use_day` FLOAT NULL DEFAULT '0'
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+
+
+
 
 
 

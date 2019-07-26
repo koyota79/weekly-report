@@ -39,8 +39,6 @@ import { sessionService } from 'redux-react-session';
 
 export const cf_fetchPost = (form ,session) => {
     const {access_token ,props} = session
-    console.log('::cf_fetchPost::props')
-    console.log(props)
     const v_url          = form.get('url')
     if(access_token !== undefined && access_token !== null){
         const reqHeader = new Headers({'Authorization': 'Bearer '+ access_token,});
@@ -87,7 +85,7 @@ export const cf_selectOptions = (optionsMap) => {
         return
 
     return optionsMap.map((i) => {
-        return <option key={i.value} value={i.value}>{i.name}</option>
+        return <option style={{backgroundColor : i.orders===0?'#dadada':''}} key={i.value} value={i.value}>{i.name}</option>
     })
 }
 
@@ -98,6 +96,8 @@ export const cf_getSelectCode = (query) => {
     form.append('p_menu',       query.menu?query.menu:"")
     form.append('p_class',      query.class?query.class:"")
     form.append('p_part',       query.part?query.part:"")
+    form.append('p_user_id',    query.userId?query.userId:"")
+
 
     return fetch(
                 query.url, {
@@ -106,8 +106,6 @@ export const cf_getSelectCode = (query) => {
                     //headers : reqHeader
                 }
             ).then(response => {
-                console.log('::::::cf_getSelectCode::::')
-                console.log(response)
                 return response
             }).catch(err =>  {
                 alert(err.message);
@@ -147,8 +145,6 @@ export const cf_fetchPost2 = (form ,props) => {
                         } else {
                             if(response.status === 401){
                                 response.json().then(json => {
-                                    console.log('::::::props::::::')
-                                    console.log(props)
                                     props.actions.logout(props.history)
                                     alert(json.msg)
                                 })

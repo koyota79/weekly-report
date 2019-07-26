@@ -48,8 +48,6 @@ const ExpansionPanelDetails = withStyles(theme => ({
 
 export default function CustomizedExpansionPanels(props) {
   const [expanded, setExpanded] = React.useState('panel1');
-  console.log('CustomizedExpansionPanels')
-  console.log(props)
   const {LIST} = props.props
   const handleChange = panel => (event, newExpanded) => {
     setExpanded(newExpanded ? panel : false);
@@ -62,7 +60,7 @@ export default function CustomizedExpansionPanels(props) {
                 <Typography>{item.title}</Typography>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <Typography>
+                    <Typography style={{whiteSpace :'pre-line'}}>
                         {item.content}
                     </Typography>
                 </ExpansionPanelDetails>

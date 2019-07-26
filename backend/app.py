@@ -61,12 +61,45 @@ def index():
           current_user = get_jwt_identity()
           app.logger.debug(current_user)
 
-          v_query  = "select id ,user_id ,title ,content ,DATE_FORMAT(reg_dt ,'%%Y-%%m-%%d') from notice order by id limit %s "
+          v_query  = "select id ,user_id ,title ,content ,DATE_FORMAT(reg_dt ,'%%Y-%%m-%%d') from notice order by id desc limit %s "
    
           v_param = (5)
           list = ExecuteQuery(v_query,v_param)
 
-          response = {'result'   : 'Y' , "LIST"   : list  ,'message' : '조회성공'}
+
+
+
+          con     = mysql.connect()
+          cursor  = con.cursor()
+
+          v_query_2   = "select a.name ,a.part ,a.commute  "
+          v_query_2  += ",case when a.part = 'MOBILE' then '모바일' "
+          v_query_2  += "      when a.part = 'UNIT'   then '단위업무' "
+          v_query_2  += "      else a.part end as part_nm "
+          v_query_2  += ",b.total_day ,(b.total_day - b.use_day )as remain_day ,b.use_day  "
+          v_query_2  += "from member a "
+          v_query_2  += "left outer join yearly_mstr b  "
+          v_query_2  += "  on a.user_id = b.user_id  "
+          v_query_2  += "where a.user_id = %s  "
+
+          v_param_2 = (current_user['userId'])
+          app.logger.debug(v_query_2)
+          cursor.execute(v_query_2, v_param_2)
+          record = cursor.fetchone()
+          con.close()
+
+          response = {'result'   : 'Y' , "LIST"   : list  ,'message' : '조회성공'
+                      ,'info'    : { 
+                          'name'       : record[0] ,
+                          'part'       : record[1] ,
+                          'commute'    : record[2] ,
+                          'part_nm'    : record[3] ,
+                          'total_day'  : record[4] ,
+                          'remain_day' : record[5] ,
+                          'use_day'    : record[6] 
+
+                      }
+          }
       else :
           response = {'result'   : 'N' , "LIST"   : []    ,'message' : '잘못된 접근경로' }  
   
@@ -333,23 +366,23 @@ def getSelectBoxList():
             v_type        = request.form.get('p_type')
             v_menu        = request.form.get('p_menu')
             v_class       = request.form.get('p_class') 
-            v_part        = request.form.get('p_part')             
+            v_part        = request.form.get('p_part')      
+            v_user_id     = request.form.get('p_user_id')      
+                   
 
             print(':::['+v_type + ':::::' + v_menu + ':::::' + v_class + '::::' + v_part + ']:::')
 
-            v_query   = "select a.* ,b.r_cnt  "
-            v_query  += ",case when a.orders = 0 then 0 else IFNULL(b.r_rank,a.orders) end as r_rank "
-            v_query  += "from cmn_code a "
-            v_query  += "left outer join report_rank b "
-            v_query  += "on a.part = b.part  and a.value = b.gubun " 
-            v_query  += "where type =%s "
+            v_query   = "select x.* from (   "
+            v_query  += "    select a.* ,b.r_cnt    "
+            v_query  += "      ,case when a.orders = 0 then 0 else IFNULL(b.r_rank,99) end as r_rank   "
+            v_query  += "    from cmn_code a   "
+            v_query  += "    left outer join report_rank b   "
+            v_query  += "      on a.part = b.part  and a.value = b.gubun  and '" + v_user_id + "' = b.user_id   "
+            v_query  += "    where type =%s "
+
 
             v_param = (v_type, )
-
-            if v_part != '' :
-              v_query +="and part in (%s , 'ALL')"
-              v_param = v_param + (v_part,)
-
+            
             if v_menu != '' :
               v_query +=" and menu=%s"
               v_param = v_param + (v_menu,)
@@ -358,7 +391,16 @@ def getSelectBoxList():
               v_query +=" and class=%s"
               v_param = v_param + (v_class,)
 
-            v_query +=" order by r_rank ,orders "
+            if v_part != '' :
+              v_query +="and a.part in (%s , 'ALL')"
+              v_param = v_param + (v_part,)
+
+
+
+
+
+            v_query  += ")x   "
+            v_query  += "order by x.r_rank ,x.orders   "
           
             print(':::::v_query:::::' + v_query)
 
@@ -432,7 +474,7 @@ def reportManagerList():
           v_query += "   ,ROW_NUMBER() OVER (PARTITION BY x.part__H ,x.name )as rowspan_name__H "
           v_query += "from( "
           v_query += "select case when a.part = 'MOBILE' then '모바일' when a.part ='UNIT' then '단위업무' else a.part end as gubun_mng "
-          v_query += ",a.name ,a.part ,b.gubun ,b.document_num ,b.title "
+          v_query += ",a.name ,b.gubun ,b.document_num ,b.title "
           v_query += ",b.content ,b.complete ,b.user_id ,b.type ,b.started as started__H  "
           v_query += ",b.issues   ,a.part as part__H ,a.levels as levels__H "
           #v_query += ",ROW_NUMBER() OVER (PARTITION BY a.part ORDER BY a.part) AS r_num__H "
@@ -441,7 +483,7 @@ def reportManagerList():
           v_query += "inner join weekly_report b "
           v_query += "on a.user_id = b.user_id "
           v_query += "where b.started =%s and a.levels < 3 "
-          v_query += ")x order by x.part ,rowspan__H desc ,rowspan_name__H desc "
+          v_query += ")x order by x.part__H ,rowspan__H desc ,rowspan_name__H desc "
           #v_query += "order by a.part asc ,levels desc ,gubun ,user_id ,started desc "
 
           v_param = (v_start_dt)
@@ -462,7 +504,7 @@ def reportManagerList():
           v_query_sub += "  on a.user_id = b.user_id "
           v_query_sub += "    and  %s = started "
           v_query_sub += "  where  1=1 "
-          v_query_sub += "    and levels < 3 "
+          v_query_sub += "    and a.levels < 3 and a.use_yn = 'Y' "
           v_query_sub += "  group by name ,part ,commute  "
           v_query_sub += "  order by part ,levels desc )x "
 
@@ -528,6 +570,28 @@ def WeeklyReportClose():
 
 
 
+@app.route('/user_manager'  , methods=['POST'])
+@jwt_required
+def userInfoManager(): 
+    try:
+      if request.method == 'POST':
+          current_user = get_jwt_identity()
+          app.logger.debug(current_user)
+
+          v_query  = "select * from member where use_yn = 'Y' order by part ,levels desc"
+          #v_param = ('Y')
+          list = ExecuteQuery(v_query ,None)
+
+          response = {'result'   : 'Y' , "LIST"   : list  ,'message' : '조회성공'
+          }
+      else :
+          response = {'result'   : 'N' , "LIST"   : []    ,'message' : '잘못된 접근경로' }  
+  
+    except Exception as e: 
+            app.logger.debug(str(e)) 
+            response = {'result' : 'E', 'message' : str(e) }  
+
+    return json.dumps(response)
 
 
 if __name__ == '__main__':
