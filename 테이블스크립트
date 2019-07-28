@@ -36,6 +36,7 @@ CREATE TABLE `member` (
 	`levels` INT(1) NULL DEFAULT NULL,
 	`part` VARCHAR(50) NULL DEFAULT NULL,
 	`commute` VARCHAR(10) NULL DEFAULT NULL,
+	`use_yn` VARCHAR(1) NULL DEFAULT 'Y',
 	PRIMARY KEY (`id`),
 	INDEX `rpt_member_idx1` (`user_id`)
 )
@@ -57,7 +58,6 @@ CREATE TABLE `cmn_code` (
 	`name` VARCHAR(50) NULL DEFAULT NULL,
 	`value` VARCHAR(255) NULL DEFAULT NULL,
 	`orders` INT(11) NULL DEFAULT NULL,
-	`use_yn` VARCHAR(1) NULL DEFAULT 'Y',
 	PRIMARY KEY (`id`)
 )
 COMMENT='공통코드'

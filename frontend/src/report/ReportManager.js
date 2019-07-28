@@ -3,17 +3,18 @@ import React, { Component } from 'react';
 import List from '../component/common/List';
 import { Button } from 'react-bootstrap';
 import axios from 'axios';
-import {cf_fetchPost2} from '../component/common/CommonMethod';
+import {cf_fetchPost2 ,cf_getDecodeToken} from '../component/common/CommonMethod';
+import { sessionService } from 'redux-react-session';
 import Moment  from 'moment';
 import getDay from "date-fns/getDay";
 import ListPaging from '../component/common/ListPaging';
-import UserInfoModal from '../component/UserInfoModal';
+//import UserInfoModal from '../component/UserInfoModal';
 import DatePicker ,{registerLocale} from 'react-datepicker';
 import ReportMngMemberList from './ReportMngMemberList';
 import * as sessionActions  from '../action/SessionActions';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import {  Modal, ModalHeader, ModalBody, ModalFooter, Input} from 'reactstrap';
+//import {  Modal, ModalHeader, ModalBody, ModalFooter, Input} from 'reactstrap';
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 
@@ -26,7 +27,6 @@ class ReportManager extends Component{
             api_url         : process.env.REACT_APP_API_URL,
             LIST            : [],
             LIST_SUB        : [],
-            modalIsOpen     : false,
             date            : new Date(),            
             currentPage     : Moment().weeks(),
             value           : true,
@@ -35,15 +35,22 @@ class ReportManager extends Component{
     }
 
     componentWillMount() {
-
-        const {currentPage , start_dt} = this.state
-        let reportMngObj = {
-            'currentWeek'  : currentPage ,
-            'datePicker'   : start_dt ,
-            'gubun'        : 'CAL'                        
-
-        } 
-        this.fncWeekDate(reportMngObj)        
+        const userSession = sessionService.loadUser();
+                userSession.then(response => { 
+                    const access_token = response.access_token
+                    const {part,userId ,levels} = cf_getDecodeToken(access_token)
+                    const {currentPage , start_dt} = this.state
+                    this.setState({'levels' :levels})
+                    let reportMngObj = {
+                        'currentWeek'  : currentPage ,
+                        'datePicker'   : start_dt ,
+                        'levels'       : levels,
+                        'gubun'        : 'CAL'                        
+            
+                    } 
+                    this.fncWeekDate(reportMngObj)        
+                }
+            )
     }   
 
     isWeekday = date => {
@@ -216,19 +223,19 @@ class ReportManager extends Component{
         });
     }
 
-    // shouldComponentUpdate(nextProps, nextState){
-    //     return this.state.value !== nextState.value;
+    shouldComponentUpdate(nextProps, nextState){
+        return this.state.value !== nextState.value;
+    }
+
+    // openModal = () => {
+    //     const { modalIsOpen  } = this.state;
+    //     this.setState({ modalIsOpen: !modalIsOpen ,value : true });
     // }
 
-    openModal = () => {
-        const { modalIsOpen  } = this.state;
-        this.setState({ modalIsOpen: !modalIsOpen ,value : true });
-    }
-
-    closeModal = () => {
-        console.log('closeModal')
-        this.setState({modalIsOpen: false ,value : false});
-    }
+    // closeModal = () => {
+    //     console.log('closeModal')
+    //     this.setState({modalIsOpen: false ,value : false});
+    // }
 
     render(){
         console.log("ReportManager")
@@ -246,13 +253,13 @@ class ReportManager extends Component{
                         <div style={{ width: '300px'  ,marginLeft : "380px"  ,float : "left"}} >
                             <ListPaging data={this.state} onPagingClick={this.handlerPagingClick}/> 
                         </div>
-                        <div style={{ width: '100px'  ,marginRight : "50px"  ,float : "right"}}>
+                        <div style={{ width: '100px'  ,marginRight : "50px"  ,float : "right" ,display :this.state.levels>2?'block':'none'}}>
                             <Button variant={this.state.isToggleOn ? 'danger' : 'primary'} className="float-right"  onClick={this.handlerCloseReport}  > 
                                 {this.state.isToggleOn ? '마감취소' : '마감'}
                             </Button>
                         </div>
                     </div>
-                    <UserInfoModal isOpen={this.state.modalIsOpen}  onClose={this.closeModal}/>
+                    {/* <UserInfoModal isOpen={this.state.modalIsOpen}  onClose={this.closeModal}/> */}
                     { this.state.statusText==="OK" ? (
                         <List data={this.state} onRemove={null} onReportCopy={null} onDoubleClick={null} />
                         ):(

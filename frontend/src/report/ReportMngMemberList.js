@@ -1,11 +1,11 @@
 import React from 'react';
 import { Table } from 'reactstrap';
+import ReactHtmlParser from 'react-html-parser'; 
 
+//yarn add react-html-parser
 //class ReportMngMemberList extends React.Component {
-  //render() {
+  //render() { 
 const ReportMngMemberList = ({data ,onClick} ) => {
-  console.log('ReportMngMemberList')
-    console.log(data)
     return (
       <Table bordered style={{fontSize : '12px'}}>
         <thead>
@@ -23,32 +23,32 @@ const ReportMngMemberList = ({data ,onClick} ) => {
              <tr key={i}><th scope="row">성명</th>
                     <td>
                       {
-                        item.lms.split(',').map( (line,j) => 
+                        item.lms?item.lms.split(',').map( (line,j) => 
                           ( <span key={j}> 
-                              { line.indexOf('(0)')>0?<span style={{color:'red'}}>{line}</span>:line }
+                              { line.indexOf('(0)')>0?<span style={{color:'red'}}>{ReactHtmlParser(line)}</span>:ReactHtmlParser(line) }
                               <br/> 
                             </span> 
-                          ))
+                          )):(null)
                       }
                     </td>
                     <td>
                       {
-                        item.mobile.split(',').map( (line,j) => 
+                        item.mobile?item.mobile.split(',').map( (line,j) => 
                           ( <span key={j} > 
-                            { line.indexOf('(0)')>0?<span style={{color:'red'}}>{line}</span>:line }
+                             { line.indexOf('(0)')>0?<span style={{color:'red'}}>{ReactHtmlParser(line)}</span>:ReactHtmlParser(line) }
                             <br/> 
                             </span> 
-                          ))
+                          )):(null)
                       }
                     </td>
                     <td>
                       {
-                        item.unit.split(',').map( (line,j) => 
-                            ( <span key={j}> 
-                                { line.indexOf('(0)')>0?<span style={{color:'red'}}>{line}</span>:line }
-                                <br/> 
+                        item.unit?item.unit.split(',').map( (line,j) => 
+                            ( <span key={j} > 
+                              { line.indexOf('(0)')>0?<span style={{color:'red'}}>{ReactHtmlParser(line)}</span>:ReactHtmlParser(line) }
+                              <br/> 
                               </span> 
-                            ))
+                            )):(null)
                       }
                     </td>
              </tr>

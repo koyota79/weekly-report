@@ -66,7 +66,7 @@ class Header extends Component{
                 <Nav.Link href="/">Home</Nav.Link>
                 <Nav.Link href="/report">주간보고</Nav.Link>
                 {
-                  userLevels >2?(
+                  userLevels >1?(
                     <Nav.Link href="/report_manager">주간보고 현황</Nav.Link> 
                   )
                   :('') 

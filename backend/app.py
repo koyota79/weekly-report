@@ -156,7 +156,7 @@ def login():
                     }
                     #v_expires = datetime.datetime.now() + datetime.timedelta(days=0, seconds=30)
                     #print(v_expires)
-                    v_expires = datetime.timedelta(seconds=int(config.SESSTION_TIME)) #seconds=10000
+                    v_expires = datetime.timedelta(days=int(config.SESSTION_TIME)) #seconds=10000
                     print(v_expires)
                     #datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=60) 
                     access_token = create_access_token(identity=user ,expires_delta=v_expires )  #expires_delta
@@ -462,7 +462,8 @@ def reportManagerList():
     response ={}    
     try:
       if request.method == 'POST':
-          current_user = get_jwt_identity()
+          current_user   = get_jwt_identity()
+          v_part         = current_user['part']
 
           v_week         = request.form.get('p_week', None)
           v_month        = request.form.get('p_month', None)
@@ -482,34 +483,49 @@ def reportManagerList():
           v_query += "from member a "
           v_query += "inner join weekly_report b "
           v_query += "on a.user_id = b.user_id "
-          v_query += "where b.started =%s and a.levels < 3 "
+          v_query += "where b.started =%s and a.levels < 3 and a.part = case when %s = 'ALL' then a.part else %s end  "
           v_query += ")x order by x.part__H ,rowspan__H desc ,rowspan_name__H desc "
           #v_query += "order by a.part asc ,levels desc ,gubun ,user_id ,started desc "
 
-          v_param = (v_start_dt)
+          v_param = (v_start_dt ,v_part ,v_part)
           list = ExecuteQuery(v_query,v_param)
-
+          v_span_str   = "<span style=width:80px;display:inline-block>"
           v_query_sub  = "select "
           v_query_sub += "   group_concat(x.lms) as lms "
           v_query_sub += "  ,group_concat(x.mobile) as mobile "
           v_query_sub += "  ,group_concat(x.unit) as unit "
           v_query_sub += "from( "
           v_query_sub += "  select  "
-          v_query_sub += "     case when a.part = 'LMS'    then concat(a.name,' (', count(b.title),')') else null end as lms "
-          v_query_sub += "    ,case when a.part = 'MOBILE' then concat(a.name,' (', count(b.title),')') else null end as mobile "
-          v_query_sub += "    ,case when a.part = 'UNIT'   then concat(a.name,' (', count(b.title),')') else null end as unit "
+          #v_query_sub += "     case when a.part = 'LMS'    then concat(a.name,' (', count(b.title),')') else null end as lms "
+          #v_query_sub += "    ,case when a.part = 'MOBILE' then concat(a.name,' (', count(b.title),')') else null end as mobile "
+          #v_query_sub += "    ,case when a.part = 'UNIT'   then concat(a.name,' (', count(b.title),')') else null end as unit "
+
+          v_query_sub += "     case when a.part = 'LMS'   then concat('" + v_span_str + "',a.name,'	(',	count(b.title), ') </span>' "
+          v_query_sub += "          ,'<span style=margin-left:30px;> - [ 진행중    : ' ,sum(case when b.complete = '진행중'   then 1 else 0 end) "
+          v_query_sub += "          ,'   완료      : ' ,sum(case when b.complete = '완료'     then 1 else 0 end) ,' ] </span>' ) " 
+          v_query_sub += "     else null end as lms "
+
+          v_query_sub += "    ,case when a.part = 'MOBILE'   then concat('<span style=width:80px;display:inline-block>',a.name,'	(',	count(b.title), ') </span>' "
+          v_query_sub += "          ,'<span style=margin-left:30px;> - [ 진행중    : ' ,sum(case when b.complete = '진행중'   then 1 else 0 end) "
+          v_query_sub += "          ,'   완료      : ' ,sum(case when b.complete = '완료'     then 1 else 0 end) ,' ] </span>' ) " 
+          v_query_sub += "     else null end as mobile "
+
+          v_query_sub += "    ,case when a.part = 'UNIT'   then concat('<span style=width:80px;display:inline-block>',a.name,'	(',	count(b.title), ') </span>' "
+          v_query_sub += "          ,'<span style=margin-left:30px;> - [ 진행중    : ' ,sum(case when b.complete = '진행중'   then 1 else 0 end) "
+          v_query_sub += "          ,'   완료      : ' ,sum(case when b.complete = '완료'     then 1 else 0 end) ,' ] </span>' ) " 
+          v_query_sub += "     else null end as unit "
             
           v_query_sub += "  from member a "
           v_query_sub += "  left outer join weekly_report b "
           v_query_sub += "  on a.user_id = b.user_id "
           v_query_sub += "    and  %s = started "
           v_query_sub += "  where  1=1 "
-          v_query_sub += "    and a.levels < 3 and a.use_yn = 'Y' "
+          v_query_sub += "    and a.levels < 3 and a.use_yn = 'Y' and a.part = case when %s = 'ALL' then a.part else %s end "
           v_query_sub += "  group by name ,part ,commute  "
           v_query_sub += "  order by part ,levels desc )x "
 
 
-          v_param_sub = (v_start_dt)
+          v_param_sub = (v_start_dt ,v_part ,v_part)
           list_sub = ExecuteQuery(v_query_sub ,v_param_sub)
 
 
