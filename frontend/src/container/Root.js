@@ -1,7 +1,7 @@
 
-import React, { Component } from 'react';
+import React from 'react';
 import 'bootstrap/dist/css/bootstrap.css';
-import {  BrowserRouter as Router, Route ,Redirect,Switch} from 'react-router-dom';
+import {  BrowserRouter as Router, Route ,Switch} from 'react-router-dom';
 //import PrivateRoute from 'react-private-route'
 import PrivateRoute from './PrivateRoute';
 import '../App.css';

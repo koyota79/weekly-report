@@ -18,6 +18,9 @@ import { bindActionCreators } from 'redux';
 import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 
+
+let lastScrollY = 0;
+
 class ReportManager extends Component{
     constructor(props) {
         super(props)
@@ -27,18 +30,26 @@ class ReportManager extends Component{
             api_url         : process.env.REACT_APP_API_URL,
             LIST            : [],
             LIST_SUB        : [],
+            EDITING         : false,
+            showTop         : false,
             date            : new Date(),            
             currentPage     : Moment().weeks(),
             value           : true,
+            selectId        : '',
             start_dt        : Moment().format('YYYY-MM-DD')
         }
     }
 
+    componentDidMount() {
+        window.addEventListener('scroll', this.handleScroll);
+    }
+
     componentWillMount() {
+        window.removeEventListener('scroll', this.handleScroll);
         const userSession = sessionService.loadUser();
                 userSession.then(response => { 
                     const access_token = response.access_token
-                    const {part,userId ,levels} = cf_getDecodeToken(access_token)
+                    const {levels} = cf_getDecodeToken(access_token)
                     const {currentPage , start_dt} = this.state
                     this.setState({'levels' :levels})
                     let reportMngObj = {
@@ -52,6 +63,28 @@ class ReportManager extends Component{
                 }
             )
     }   
+
+    handleScroll = () => {
+        lastScrollY = window.scrollY;
+        console.log(lastScrollY)
+        let isTrue = false
+        if(lastScrollY > 230){
+            isTrue = true
+        }else if(lastScrollY < 230){
+            isTrue = false
+        }
+        this.setState({
+            showTop : isTrue
+        })
+        // if (!ticking) {
+        //   window.requestAnimationFrame(() => {
+        //     this.nav.current.style.top = `${lastScrollY}px`;
+        //     ticking = false;
+        //   });
+       
+        //   ticking = true;
+        // }
+    };
 
     isWeekday = date => {
         const day = getDay(date)
@@ -103,19 +136,20 @@ class ReportManager extends Component{
             form.append('url',           this.state.api_url + '/report_manager') 
 
             cf_fetchPost2(form ,this.props).then(result => {
-                result.json().then(json => 
-                    this.setState({
-                        LIST            : json.LIST,
-                        LIST_SUB        : json.LIST_SUB,
-                        statusText      : 'OK',
-
-                        start_dt        : v_startDate,
-                        end_dt          : v_endDate,
-                        currentPage     : weeks,
-                        currentWeek     : v_currWeek,
-
-                        value           : !this.state.value
-                    }) 
+                result.json().then(json => {
+                    console.log(json)
+                        this.setState({
+                            LIST            : json.LIST,
+                            LIST_SUB        : json.LIST_SUB,
+                            statusText      : 'OK',
+                            start_dt        : v_startDate,
+                            end_dt          : v_endDate,
+                            currentPage     : weeks,
+                            currentWeek     : v_currWeek,
+                            EDITING         : this.state.EDITING?false:this.state.EDITING,
+                            value           : !this.state.value
+                        }) 
+                    }
                 ).catch(err => console.log(err));              
             }).catch(err => console.log(err));
            
@@ -223,10 +257,19 @@ class ReportManager extends Component{
         });
     }
 
-    shouldComponentUpdate(nextProps, nextState){
-        return this.state.value !== nextState.value;
-    }
+    // shouldComponentUpdate(nextProps, nextState){
+    //     return this.state.value !== nextState.value;
+    // }
 
+    handlerPosition = ({event ,cnt ,user_id}) => {
+        event.preventDefault();
+        if(cnt < 1) return
+        this.setState({
+            EDITING     : true,
+            id          : 0 ,
+            selectId    : user_id
+        })
+    }
     // openModal = () => {
     //     const { modalIsOpen  } = this.state;
     //     this.setState({ modalIsOpen: !modalIsOpen ,value : true });
@@ -236,21 +279,24 @@ class ReportManager extends Component{
     //     console.log('closeModal')
     //     this.setState({modalIsOpen: false ,value : false});
     // }
-
+    //nav = React.createRef();
     render(){
         console.log("ReportManager")
-       
         return ( 
             <div style={{ width: '100%'}}>
+                    <div style={{display:(this.state.showTop?'block':'none') ,backgroundColor:'white' ,width:'100%' ,zIndex : '9999' ,overflow : 'auto' ,position :'fixed' ,top:'0px'}}>
+                        <ReportMngMemberList  data={this.state} onPosition={this.handlerPosition} />   
+                    </div>  
+                                         
                     <div>
-                        <ReportMngMemberList data={this.state} />
+                        <ReportMngMemberList data={this.state} onPosition={this.handlerPosition}  />
                     </div>
                     <div style={{marginTop : "20px"}}>
                         <div style={{marginLeft : "20px" ,float : "left"}}>
                             <DatePicker selected={this.state.date} onChange={this.onDateChange} filterDate={this.isWeekday} dateFormat="yyyy/MM/dd"
                                     locale="kr" />
                         </div>                
-                        <div style={{ width: '300px'  ,marginLeft : "380px"  ,float : "left"}} >
+                        <div style={{ width: '300px'   ,marginLeft : "27%"  ,float : "left"}} >
                             <ListPaging data={this.state} onPagingClick={this.handlerPagingClick}/> 
                         </div>
                         <div style={{ width: '100px'  ,marginRight : "50px"  ,float : "right" ,display :this.state.levels>2?'block':'none'}}>
@@ -265,7 +311,8 @@ class ReportManager extends Component{
                         ):(
                             <div style={{ paddingTop : '100px'}}>LOADING....</div>
                         )
-                    }              
+                    } 
+
             </div>
         )
     }

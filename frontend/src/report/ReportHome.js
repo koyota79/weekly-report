@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 //import Config from 'react-native-config'
 import axios from 'axios';
 import List from '../component/common/List';
-import {cf_fetchPost ,cf_fetchPost2,cf_getSelectCode ,cf_getDecodeToken} from '../component/common/CommonMethod';
+import {cf_fetchPost2,cf_getSelectCode ,cf_getDecodeToken} from '../component/common/CommonMethod';
 import ListPaging from '../component/common/ListPaging';
 //import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap'; //Form  ,Table 
@@ -268,7 +268,7 @@ class ReportHome extends Component{
         const {nowWeek ,closeBtn } = this.state
         if(nowWeek < 0 && closeBtn){return}
         let form_id = Object.getOwnPropertyNames( rowData );
-        //console.log(this.textInput)
+        //console.log(rowData)
         this.setState({
             EDITING         : true,
             id              : rowData.id, 
@@ -574,7 +574,7 @@ class ReportHome extends Component{
                                 locale="kr" />
                     </div>
 
-                    <div style={{ width: '300px'  ,marginLeft : "23%"  ,float : "left"}} >
+                    <div style={{ width: '300px'  ,marginLeft : "27%"  ,float : "left"}} >
                         <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
                 </div>

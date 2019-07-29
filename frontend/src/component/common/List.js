@@ -6,7 +6,7 @@ import {Button  } from 'react-bootstrap';
 
 const List = (props ) => {
     //console.log(":::::::::LIST1::::::::::::::" ); 
-    //console.log(props);
+    console.log(props);
 
     const {closeBtn ,nowWeek ,btn_use} = props.data
     let tepmRows     =  0
@@ -29,7 +29,7 @@ const List = (props ) => {
             <tbody>
                 {
                     props.data.LIST.map((item,i) => (
-                        <tr key={i}  className={(props.data.EDITING && props.data.id===item.id)?"upd-corlor":""}> 
+                        <tr key={i}  className={( (props.data.EDITING && (props.data.id===item.id || props.data.selectId === item['user_id']) ) )?"upd-corlor":""}> 
                             {props.data.numbering?<td>{i+1}</td>:null}
                             {
                                 Object.getOwnPropertyNames( props.data.LIST[0]).map((keyObj ,n) => {

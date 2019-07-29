@@ -489,32 +489,21 @@ def reportManagerList():
 
           v_param = (v_start_dt ,v_part ,v_part)
           list = ExecuteQuery(v_query,v_param)
-          v_span_str   = "<span style=width:80px;display:inline-block>"
+
           v_query_sub  = "select "
           v_query_sub += "   group_concat(x.lms) as lms "
           v_query_sub += "  ,group_concat(x.mobile) as mobile "
           v_query_sub += "  ,group_concat(x.unit) as unit "
           v_query_sub += "from( "
           v_query_sub += "  select  "
-          #v_query_sub += "     case when a.part = 'LMS'    then concat(a.name,' (', count(b.title),')') else null end as lms "
-          #v_query_sub += "    ,case when a.part = 'MOBILE' then concat(a.name,' (', count(b.title),')') else null end as mobile "
-          #v_query_sub += "    ,case when a.part = 'UNIT'   then concat(a.name,' (', count(b.title),')') else null end as unit "
+          v_query_sub += "     case when a.part = 'LMS'   then concat(a.name,'|',count(b.title),'|',a.user_id,'|' "
+          v_query_sub += "         ,sum(case when b.complete = '진행중' then 1 else 0 end),'|',sum(case when b.complete = '완료' then 1 else 0 end) ) else null end as lms " 
 
-          v_query_sub += "     case when a.part = 'LMS'   then concat('" + v_span_str + "',a.name,'	(',	count(b.title), ') </span>' "
-          v_query_sub += "          ,'<span style=margin-left:30px;> - [ 진행중    : ' ,sum(case when b.complete = '진행중'   then 1 else 0 end) "
-          v_query_sub += "          ,'   완료      : ' ,sum(case when b.complete = '완료'     then 1 else 0 end) ,' ] </span>' ) " 
-          v_query_sub += "     else null end as lms "
+          v_query_sub += "    ,case when a.part = 'MOBILE'   then concat(a.name,'|',count(b.title),'|',a.user_id,'|' "
+          v_query_sub += "         ,sum(case when b.complete = '진행중' then 1 else 0 end),'|',sum(case when b.complete = '완료' then 1 else 0 end) ) else null end as mobile " 
 
-          v_query_sub += "    ,case when a.part = 'MOBILE'   then concat('<span style=width:80px;display:inline-block>',a.name,'	(',	count(b.title), ') </span>' "
-          v_query_sub += "          ,'<span style=margin-left:30px;> - [ 진행중    : ' ,sum(case when b.complete = '진행중'   then 1 else 0 end) "
-          v_query_sub += "          ,'   완료      : ' ,sum(case when b.complete = '완료'     then 1 else 0 end) ,' ] </span>' ) " 
-          v_query_sub += "     else null end as mobile "
-
-          v_query_sub += "    ,case when a.part = 'UNIT'   then concat('<span style=width:80px;display:inline-block>',a.name,'	(',	count(b.title), ') </span>' "
-          v_query_sub += "          ,'<span style=margin-left:30px;> - [ 진행중    : ' ,sum(case when b.complete = '진행중'   then 1 else 0 end) "
-          v_query_sub += "          ,'   완료      : ' ,sum(case when b.complete = '완료'     then 1 else 0 end) ,' ] </span>' ) " 
-          v_query_sub += "     else null end as unit "
-            
+          v_query_sub += "    ,case when a.part = 'UNIT'   then concat(a.name,'|',count(b.title),'|',a.user_id,'|' "
+          v_query_sub += "         ,sum(case when b.complete = '진행중' then 1 else 0 end),'|',sum(case when b.complete = '완료' then 1 else 0 end) ) else null end as unit " 
           v_query_sub += "  from member a "
           v_query_sub += "  left outer join weekly_report b "
           v_query_sub += "  on a.user_id = b.user_id "
