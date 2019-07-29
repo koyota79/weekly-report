@@ -6,12 +6,13 @@ import {Button  } from 'react-bootstrap';
 
 const List = (props ) => {
     //console.log(":::::::::LIST1::::::::::::::" ); 
-    console.log(props);
+    //console.log(props);
 
     const {closeBtn ,nowWeek ,btn_use} = props.data
     let tepmRows     =  0
     let tepmRows_2   =  0
     let tepmName     =  ''
+ 
     return props.data.LIST.length > 0 ?(
       
             <Table striped bordered hover size="sm">
@@ -61,7 +62,8 @@ const List = (props ) => {
       
                                     return ( (!keyObj.includes("id") && !keyObj.includes("__H"))?(
                                                 rowsPan?(
-                                                    <td key={n} rowSpan={rowsPan} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } className="fontSize_13" > 
+                                                    <td key={n} rowSpan={rowsPan} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } 
+                                                            className="fontSize_13" > 
                                                     {item[keyObj]}
                                                     </td>
                                                 ):(

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component , createRef} from 'react';
 //import { sessionService } from 'redux-react-session';
 import List from '../component/common/List';
 import { Button } from 'react-bootstrap';
@@ -38,6 +38,7 @@ class ReportManager extends Component{
             selectId        : '',
             start_dt        : Moment().format('YYYY-MM-DD')
         }
+        this.divFocus = createRef();
     }
 
     componentDidMount() {
@@ -66,24 +67,11 @@ class ReportManager extends Component{
 
     handleScroll = () => {
         lastScrollY = window.scrollY;
-        console.log(lastScrollY)
         let isTrue = false
-        if(lastScrollY > 230){
-            isTrue = true
-        }else if(lastScrollY < 230){
-            isTrue = false
-        }
+        isTrue = lastScrollY > 190?true:false        
         this.setState({
             showTop : isTrue
         })
-        // if (!ticking) {
-        //   window.requestAnimationFrame(() => {
-        //     this.nav.current.style.top = `${lastScrollY}px`;
-        //     ticking = false;
-        //   });
-       
-        //   ticking = true;
-        // }
     };
 
     isWeekday = date => {
@@ -146,6 +134,7 @@ class ReportManager extends Component{
                             end_dt          : v_endDate,
                             currentPage     : weeks,
                             currentWeek     : v_currWeek,
+                            focusParent     : this.focusParent,
                             EDITING         : this.state.EDITING?false:this.state.EDITING,
                             value           : !this.state.value
                         }) 
@@ -260,7 +249,7 @@ class ReportManager extends Component{
     // shouldComponentUpdate(nextProps, nextState){
     //     return this.state.value !== nextState.value;
     // }
-
+    
     handlerPosition = ({event ,cnt ,user_id}) => {
         event.preventDefault();
         if(cnt < 1) return
@@ -269,7 +258,9 @@ class ReportManager extends Component{
             id          : 0 ,
             selectId    : user_id
         })
+      console.log(this.divFocus)
     }
+
     // openModal = () => {
     //     const { modalIsOpen  } = this.state;
     //     this.setState({ modalIsOpen: !modalIsOpen ,value : true });
@@ -279,9 +270,9 @@ class ReportManager extends Component{
     //     console.log('closeModal')
     //     this.setState({modalIsOpen: false ,value : false});
     // }
-    //nav = React.createRef();
+
     render(){
-        console.log("ReportManager")
+        //console.log("ReportManager")
         return ( 
             <div style={{ width: '100%'}}>
                     <div style={{display:(this.state.showTop?'block':'none') ,backgroundColor:'white' ,width:'100%' ,zIndex : '9999' ,overflow : 'auto' ,position :'fixed' ,top:'0px'}}>
@@ -305,9 +296,10 @@ class ReportManager extends Component{
                             </Button>
                         </div>
                     </div>
+                    {/* <div ref={ this.divFocus}>11111111111111</div> */}
                     {/* <UserInfoModal isOpen={this.state.modalIsOpen}  onClose={this.closeModal}/> */}
                     { this.state.statusText==="OK" ? (
-                        <List data={this.state} onRemove={null} onReportCopy={null} onDoubleClick={null} />
+                        <List data={this.state} onRemove={null} onReportCopy={null} onDoubleClick={null}  />
                         ):(
                             <div style={{ paddingTop : '100px'}}>LOADING....</div>
                         )
