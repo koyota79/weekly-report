@@ -279,6 +279,7 @@ class ReportHome extends Component{
             f_complete      : rowData.complete,
             f_type          : rowData.type,
             f_issues        : rowData.issues,
+            selectId        : "X",
             FORM_ID         : form_id
         });
     }

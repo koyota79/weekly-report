@@ -25,8 +25,8 @@ const ReportMngMemberList = ({data ,onPosition} ) => {
                       {
                         item.lms?item.lms.split(',').map( (line,j) => {
                           const user  =  line.split('|')
-                          let v_hmlt  =  user[0]  + '('+ user[1] + ')' + '<span style=margin-left:30px;> -&nbsp;[진행중:&nbsp;' + user[3]
-                              v_hmlt +=  '&nbsp;&nbsp;완료:&nbsp;' + user[4] +']'
+                          let v_hmlt  =  String(user[0])  + '('+ String(user[1]) + ')' + '<span style=margin-left:30px;> -&nbsp;[진행중:&nbsp;' + String(user[3])
+                              v_hmlt +=  '&nbsp;&nbsp;완료:&nbsp;' + String(user[4]) +']'
 
                           return(                               
                             <span key={j}>  
