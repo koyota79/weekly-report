@@ -1,12 +1,9 @@
 import React, { Component } from 'react';
-//import Config from 'react-native-config'
 import axios from 'axios';
 import List from '../component/common/List';
 import {cf_fetchPost2,cf_getSelectCode ,cf_getDecodeToken} from '../component/common/CommonMethod';
 import ListPaging from '../component/common/ListPaging';
-//import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap'; //Form  ,Table 
-//import { Input } from 'reactstrap';
 import Moment  from 'moment';
 import '../App.css';
 import DatePicker ,{registerLocale} from 'react-datepicker';
@@ -325,7 +322,7 @@ class ReportHome extends Component{
                             result.json().then(json => 
                                 this.setState({
                                     id                : "",
-                                    f_gubun           : "",
+                                    f_gubun           : f_gubun,
                                     f_document_num    : "",
                                     f_title           : "",
                                     f_content         : "",
@@ -579,7 +576,7 @@ class ReportHome extends Component{
                         <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
                 </div>
-                <ReportForm onChange={this.handleChange} props={this.state} ref={this.textInput} />
+                <ReportForm onChange={this.handleChange} props={this.state}  />
                 { this.state.statusText==="OK" ? (
                     <List data={this.state} onRemove={this.handleRemove} onReportCopy={this.handlerReportCopy} onDoubleClick={this.handlerSelectRow} />
                     ):(

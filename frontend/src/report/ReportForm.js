@@ -3,7 +3,7 @@ import {Form ,Table } from 'react-bootstrap';
 import { Input } from 'reactstrap';
 import {cf_selectOptions} from '../component/common/CommonMethod';
 
-const ReportForm = ({onChange ,props }) => {
+const ReportForm = ({onChange ,props}) => {
     
   const {f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,f_issues ,selectOptions} = props
   return (
@@ -12,8 +12,8 @@ const ReportForm = ({onChange ,props }) => {
                     <tbody>
                         <tr>
                             <td style={{ width: '120px' ,textAlign : "center"}}>
-                                <Form.Group controlId='f_gubun'> 
-                                    <Form.Control as="select" className="fontSize_12"  onChange={onChange} value={f_gubun ||''} >
+                                <Form.Group controlId='f_gubun' > 
+                                    <Form.Control as="select"  className="fontSize_12"  onChange={onChange} value={f_gubun ||''} >
                                         {cf_selectOptions(selectOptions?selectOptions.GUBUN:null)}
                                     </Form.Control> 
                                 </Form.Group>                            
