@@ -49,8 +49,8 @@ export const cf_fetchPost = (form ,session) => {
                         headers : reqHeader
                     }
                 ).then(response => {
-                    console.log('::::::cnfetch::::')
-                    console.log(response)
+                    //console.log('::::::cnfetch::::')
+                    //console.log(response)
                     //return response
                     if (response.ok) {
                         return response
@@ -115,8 +115,8 @@ export const cf_getSelectCode = (query) => {
 
 export const cf_getDecodeToken = (access_token) => {
     var jwtDecode    = JWT(access_token);
-    console.log(":::cf_getDecodeToken decode:::::")
-    console.log(jwtDecode)
+    //console.log(":::cf_getDecodeToken decode:::::")
+    //console.log(jwtDecode)
     return jwtDecode.identity
 }
 
@@ -138,8 +138,8 @@ export const cf_fetchPost2 = (form ,props) => {
                             headers : reqHeader
                         }
                     ).then(response => {
-                        console.log('::::::cnfetch2::::')
-                        console.log(response)
+                        //console.log('::::::cnfetch2::::')
+                        //console.log(response)
                         if (response.ok) {
                             return response
                         } else {

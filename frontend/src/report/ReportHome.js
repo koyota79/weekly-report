@@ -59,7 +59,7 @@ class ReportHome extends Component{
     componentWillMount() {
         const userSession = sessionService.loadUser();
                 userSession.then(response => { 
-                    console.log(':::::componentWillMount MAIN::::::')
+                    //console.log(':::::Report componentWillMount MAIN::::::')
                     const access_token = response.access_token
                     const {part,userId} = cf_getDecodeToken(access_token)
                     const {currentPage , start_dt} = this.state
@@ -155,7 +155,7 @@ class ReportHome extends Component{
 
     fncWeekDate = (wkDateObj) =>{
         let {currentWeek ,datePicker ,gubun} = wkDateObj
-        console.log("::dates 달력 선택 일자::");
+        //console.log("::dates 달력 선택 일자::");
 
         let weeks = Moment(datePicker).week()
  
@@ -341,9 +341,9 @@ class ReportHome extends Component{
                                         document_num    : f_document_num,
                                         title           : f_title,
                                         content         : f_content,
+                                        issues          : f_issues,
                                         complete        : f_complete,
-                                        type            : f_type ,
-                                        issues          : f_issues
+                                        type            : f_type 
                                     })
                                 })
                             )
@@ -537,7 +537,7 @@ class ReportHome extends Component{
     render(){
         const {EDITING ,closeBtn} = this.state //f_gubun ,f_document_num ,f_title ,f_content ,f_complete ,f_type ,nowWeek
         //const options = {week : [] ,gubun : [] ,complete : [] ,type : []}
-        console.log("::REPORT::")
+        //console.log("::REPORT::")
   
         let v_btnTrue = 'none'
         if(!closeBtn){

@@ -25,9 +25,9 @@ class Main extends Component{
         cf_fetchPost2(form,this.props).then(response => {
             if(response.ok){
                 response.json().then(json => {
-                    console.log(json)
+                    //console.log(json)
                     if(json.result ==='Y'){
-                        console.log(json.LIST)
+                        //console.log(json.LIST)
                         this.setState({
                             LIST : json.LIST ,
                             info : json.info
@@ -41,7 +41,7 @@ class Main extends Component{
     }
 
     render(){
-        console.log("MAIN")
+        //console.log("MAIN")
         return ( 
             <div>
                     <div style={{marginTop:'20px' ,width:'1300px' ,display :'inline-flex'}}>

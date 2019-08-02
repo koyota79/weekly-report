@@ -26,7 +26,7 @@ const ReportForm = ({onChange ,props }) => {
                             <td style={{ width: '300px' ,textAlign : "center"}}>
                                 <Form.Group controlId="f_title">
                                 {/* ref={(input) => { this.inputform = input; }} */}
-                                    <Form.Control placeholder="요청사항"  className="fontSize_12" onChange={onChange}  value={f_title ||''} /> 
+                                    <Form.Control placeholder="제목"  className="fontSize_12" onChange={onChange}  value={f_title ||''} /> 
                                 </Form.Group>
                             </td>
                             <td style={{ width: '0px' ,textAlign : "center"}}>

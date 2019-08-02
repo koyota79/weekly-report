@@ -12,6 +12,7 @@ const List = (props ) => {
     let tepmRows     =  0
     let tepmRows_2   =  0
     let tepmName     =  ''
+    let tempGubunNm  =  ''
  
     return props.data.LIST.length > 0 ?(
       
@@ -37,15 +38,20 @@ const List = (props ) => {
                                         let rowCnt          = item['rowspan__H']
                                         let rowCnt_2        = item['rowspan_name__H']
                                         let v_name          = item['name']
+                                        let v_gubun_mng     = item['gubun_mng']
                                         let rowsPan         = null
                                         let rowsPan_2       = null
                                         let isTrue          = false
-   
+                                        let isGubunTrue     = false
+
                                         if(keyObj === 'gubun_mng'){
                                             if(tepmRows < rowCnt)
                                                 rowsPan = rowCnt
+                                            else if(tempGubunNm !==v_gubun_mng && rowCnt === 1 )
+                                                isGubunTrue = true
 
-                                            tepmRows    = rowCnt        
+                                            tepmRows    = rowCnt
+                                            tempGubunNm = v_gubun_mng      
                                         }
 
 
@@ -61,7 +67,7 @@ const List = (props ) => {
 
       
                                     return ( (!keyObj.includes("id") && !keyObj.includes("__H"))?(
-                                                rowsPan?(
+                                                (rowsPan||isGubunTrue)?(
                                                     <td key={n} rowSpan={rowsPan} onDoubleClick={() => btn_use?props.onDoubleClick(item):'' } 
                                                             className="fontSize_13" > 
                                                     {item[keyObj]}
