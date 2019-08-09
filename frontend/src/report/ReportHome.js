@@ -19,6 +19,8 @@ import ko from 'date-fns/locale/ko';
 registerLocale('kr', ko)
 //npm start .env.development REACT_APP_API_URL=26.2.111.149:5000
 
+let btnClick = true
+
 class ReportHome extends Component{
     constructor(props) {
         super(props)
@@ -42,7 +44,10 @@ class ReportHome extends Component{
             currentPage     : Moment().weeks(),
             start_dt        : Moment().format('YYYY-MM-DD'),      
             end_dt          : "",
-
+            setFocus          : {
+                focus : true ,
+                focus_id : 'f_gubun'
+            },
             //복사할때 필요한 현재 셋팅값
             first_start_dt  : "",
             first_year      : "", 
@@ -139,6 +144,7 @@ class ReportHome extends Component{
                         this.setState({
                             selectOptions : v_selectObj ,f_gubun : v_gubun_cd
                         })
+
                     }else{
                         alert(json.info.message)
                     } 
@@ -156,9 +162,10 @@ class ReportHome extends Component{
 
         let weeks = Moment(datePicker).week()
  
-        if(gubun ==="BTN")//버튼클릭시
+        if(gubun ==="BTN"){//버튼클릭시
             weeks = currentWeek
-         
+            btnClick = false
+        }
 
         //console.log("금요일 찾기 ::" + Moment().week(weeks-1).format('YYYYMMDD'));
         let v_startDate = ""
@@ -181,7 +188,7 @@ class ReportHome extends Component{
         let v_year      = Moment(v_startDate).format('YYYY')
         let v_month     = Moment(v_startDate).format('MM')
 
-        const { first_start_dt ,first_year ,first_month ,first_week } = this.state;
+        const { first_start_dt ,first_year ,first_month ,first_week} = this.state;
         let v_firstDate = first_start_dt?first_start_dt:v_startDate
         let v_weekState = 0
         let v_currentWeeks  = Moment(v_firstDate).isoWeekday(5).week()
@@ -232,7 +239,6 @@ class ReportHome extends Component{
                     this.setState({
                         LIST         : json.LIST,
                         statusText   : 'OK',
-
                         start_dt     : v_startDate,
                         end_dt       : v_endDate,
                         currentPage  : weeks,
@@ -250,15 +256,20 @@ class ReportHome extends Component{
         e.preventDefault()
         this.setState({
             id                : "",
-            f_gubun           : "",
+            f_gubun           : btnClick?"":this.state.f_gubun,
             f_document_num    : "",
             f_title           : "",
             f_content         : "",
             f_complete        : "",
             f_type            : "",
             f_issues          : "",
-            EDITING           : false
+            EDITING           : false,
+            setFocus          : {
+                focus : true ,
+                focus_id : 'f_gubun'
+            }
         })
+        btnClick = true
     }
 
     handlerSelectRow = (rowData) =>{
@@ -315,7 +326,7 @@ class ReportHome extends Component{
                     form.append('p_start_dt',    start_dt.replace(/-/gi,""))  
                     form.append('p_end_dt',      end_dt.replace(/-/gi,"")) 
                     form.append('url',           api_url + '/weekly_report_insert')
-        
+
                     cf_fetchPost2(form ,this.props).then(result => {
                         //console.log(result)
                         if(result.ok){
@@ -576,7 +587,7 @@ class ReportHome extends Component{
                         <ListPaging data={this.state} onPagingClick={this.handlerPagingClick} style={{ width: '300px'}}/> 
                     </div>
                 </div>
-                <ReportForm onChange={this.handleChange} props={this.state}  />
+                <ReportForm onChange={this.handleChange} props={this.state} />
                 { this.state.statusText==="OK" ? (
                     <List data={this.state} onRemove={this.handleRemove} onReportCopy={this.handlerReportCopy} onDoubleClick={this.handlerSelectRow} />
                     ):(
