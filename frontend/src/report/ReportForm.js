@@ -31,7 +31,7 @@ const ReportForm = ({onChange ,props}) => {
                                     <Form.Control placeholder="제목"  className="fontSize_12" onChange={onChange}  value={f_title ||''} /> 
                                 </Form.Group>
                             </td>
-                            <td style={{ width: '0px' ,textAlign : "center"}}>
+                            <td style={{ width: '450px' ,textAlign : "center"}}>  
                                 <Form.Group>                                    
                                     <Input type="textarea" name="f_content" id="f_content"   placeholder="처리내용" className="fontSize_12" onChange={onChange}  value={f_content ||''} />
                                 </Form.Group>
